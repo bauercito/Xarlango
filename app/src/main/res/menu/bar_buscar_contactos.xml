@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".Usuarios">
+    <item android:id="@+id/searchUsuario"
+        android:title="añadir"
+        android:icon="@drawable/aniadir_usuarios"
+        app:showAsAction="always">
+    </item>
+    <item android:id="@+id/ayuda"
+        android:title="Ayuda"
+        app:showAsAction="never">
+    </item>
+</menu>

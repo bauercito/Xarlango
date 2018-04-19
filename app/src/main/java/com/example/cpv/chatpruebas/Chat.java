@@ -1,5 +1,6 @@
 package com.example.cpv.chatpruebas;
 
+import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,32 +13,47 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 
+import org.apache.commons.net.ntp.NTPUDPClient;
+import org.apache.commons.net.ntp.TimeInfo;
+import org.apache.commons.net.ntp.TimeStamp;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Chat extends AppCompatActivity {
     String nombreChat;
     String numeroOrigen;
     String numeroDestino;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.chat);
 
         //recoger datos
-        Bundle extras=getIntent().getExtras();
-        nombreChat=extras.getString("nombreChat");
-        numeroOrigen=extras.getString("numero_usuario");
-        numeroDestino=extras.getString("numero_destino");
+        Bundle extras = getIntent().getExtras();
+        nombreChat = extras.getString("nombreChat");
+        numeroOrigen = extras.getString("numero_usuario");
+        numeroDestino = extras.getString("numero_destino");
     }
-    @Override protected void onResume() {
+
+    @Override
+    protected void onResume() {
         super.onResume();
         //LEER DATOS
         FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference myRef = database.getReference("message/"+nombreChat);
+        DatabaseReference myRef = database.getReference("message/" + nombreChat);
         // Read from the database
         myRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -46,12 +62,13 @@ public class Chat extends AppCompatActivity {
                 // whenever data at this location is updated.
                 //String value = dataSnapshot.getValue(String.class);
 
-                ArrayList<String> palabras=new ArrayList();
-                for (DataSnapshot child: dataSnapshot.getChildren()) {
+                ArrayList<String> palabras = new ArrayList();
+                for (DataSnapshot child : dataSnapshot.getChildren()) {
                     palabras.add(child.getValue().toString());
                 }
                 restablecerListView(palabras);
             }
+
             @Override
             public void onCancelled(DatabaseError error) {
                 // Failed to read value
@@ -60,27 +77,27 @@ public class Chat extends AppCompatActivity {
         });
     }
 
-    public void restablecerListView(ArrayList<String> palabras){
+    public void restablecerListView(ArrayList<String> palabras) {
         ListView lista;
-        lista = (ListView)findViewById(R.id.listview);
-        ArrayAdapter<String> adaptador = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,palabras );
+        lista = (ListView) findViewById(R.id.listview);
+        ArrayAdapter<String> adaptador = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, palabras);
         lista.setAdapter(adaptador);
         lista.setSelection(palabras.size() - 1);
     }
 
 
-    public void enviar(View enviar){
-        TextView input=findViewById(R.id.texto1);
+    public void enviar(View enviar) {
+        TextView input = findViewById(R.id.texto1);
         //Se crea el chat en message
         FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference myRef = database.getReference("message/"+nombreChat+"/"+obtenerFecha());
+        DatabaseReference myRef = database.getReference("message/" + nombreChat + "/" + obtenerFecha());
         myRef.setValue(input.getText().toString());
 
 
         //se crea los metadatos en el usuario emisor y receptor
-        DatabaseReference myRef01 = database.getReference("users/"+numeroOrigen+"/chats/"+nombreChat+"/"+"ultimo_uso");
+        DatabaseReference myRef01 = database.getReference("users/" + numeroOrigen + "/chats/" + nombreChat + "/" + "ultimo_uso");
         myRef01.setValue(obtenerFecha());
-        DatabaseReference myRef02 = database.getReference("users/"+numeroDestino+"/chats/"+nombreChat+"/"+"ultimo_uso");
+        DatabaseReference myRef02 = database.getReference("users/" + numeroDestino + "/chats/" + nombreChat + "/" + "ultimo_uso");
         myRef02.setValue(obtenerFecha());
 
         /*FirebaseDatabase database02 = FirebaseDatabase.getInstance();
@@ -90,14 +107,33 @@ public class Chat extends AppCompatActivity {
 
     }
 
-    public String obtenerFecha(){
-        Calendar fecha = new GregorianCalendar();
-        int ano = fecha.get(Calendar.YEAR);
-        int mes = fecha.get(Calendar.MONTH);
-        int dia = fecha.get(Calendar.DAY_OF_MONTH);
-        int hora = fecha.get(Calendar.HOUR_OF_DAY);
-        int minuto = fecha.get(Calendar.MINUTE);
-        int segundo = fecha.get(Calendar.SECOND);
-        return dia+"_"+mes+1+"_"+ano+"-"+hora+":"+minuto+":"+segundo;
+    public String obtenerFecha() {
+        String[] hosts = new String[] {"cuco.rediris.es"};
+
+        NTPUDPClient client = new NTPUDPClient();
+        // We want to timeout if a response takes longer than 5 seconds
+        client.setDefaultTimeout(2000);
+        SimpleDateFormat OutPutFormat = new SimpleDateFormat(
+                "dd-M-yyyy HH:mm:ss:SSS", java.util.Locale.getDefault());
+        for (String host : hosts) {
+            try {
+                StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitNetwork().build();
+                StrictMode.setThreadPolicy(policy);
+                InetAddress hostAddr = InetAddress.getByName(host);
+                TimeInfo info = client.getTime(hostAddr);
+                Date date = new Date(info.getReturnTime());
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(date); //tuFechaBase es un Date;
+                calendar.add(Calendar.HOUR,   6); //horasASumar es int.
+                String out = OutPutFormat.format(calendar.getTime());
+                return out;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        client.close();
+        return null;
+
     }
+
 }

@@ -14,6 +14,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -38,6 +40,8 @@ public class Usuarios extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.usuarios);
+
+
         tMgr=(TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         getTelefono();
         buscarUsuario();
@@ -69,7 +73,7 @@ public class Usuarios extends AppCompatActivity {
     public void restablecerListView(final ArrayList<String> chats){
         ListView lista;
         lista = (ListView)findViewById(R.id.listview);
-        ArrayAdapter<String> adaptador = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,chats );
+        AdaptadorListaChat adaptador = new AdaptadorListaChat(this,chats,numero);
         lista.setAdapter(adaptador);
         lista.setSelection(chats.size() - 1);
 
@@ -126,8 +130,6 @@ public class Usuarios extends AppCompatActivity {
         }
         public void setTelefono(){
             numero= tMgr.getLine1Number();
-            TextView texto=findViewById(R.id.ntelefono);
-            texto.setText(numero);
         }
         @Override
         public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -147,45 +149,7 @@ public class Usuarios extends AppCompatActivity {
         myRef.child("nombre").setValue(nombre);
 
     }
-    //BUSCO UN USUARIO
-        public void buscar(View buscar){
-        final TextView numeroTLF=findViewById(R.id.numeroTLF);
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference myRef = database.getReference("users");
-        myRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                int respuesta=0;
-                for (DataSnapshot child : dataSnapshot.getChildren()) {
-                    if(child.getKey().equalsIgnoreCase(numeroTLF.getText().toString())){
-                        respuesta=1;
-                    }
-                }
-                mensaje(respuesta,numeroTLF.getText().toString());
 
-            }
-
-            @Override
-            public void onCancelled(DatabaseError error) {
-                // Failed to read value
-                Log.w("no", "Failed to read value.", error.toException());
-            }
-        });
-    }
-    //ENVIO MENSAJES
-    public void mensaje(int respuesta,String numeroDestino){
-        if(respuesta==1){
-            String nombreChat=numero+"_"+numeroDestino;
-            Intent i=new Intent(this,Chat.class);
-            i.putExtra("nombreChat",nombreChat);
-            i.putExtra("numero_usuario",numero);
-            i.putExtra("numero_destino",numeroDestino);
-           // i.putExtra("numeroPropio",numeroPropio);
-            startActivity(i);
-        }else{
-            Toast.makeText(this, "El usuario NO existe", Toast.LENGTH_SHORT).show();
-        }
-    }
 
     //CONSEGUIR NOMBRE USUARIO
     public void getNombre() {
@@ -218,4 +182,22 @@ public class Usuarios extends AppCompatActivity {
     }
 
 
+    //TOOLBAR
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.bar_usuarios,menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id=item.getItemId();
+        if(id==R.id.aniadirUsuario){
+            Intent i=new Intent(this,Buscar_contactos.class);
+            startActivity(i);
+            return true;
+        }else{
+            return super.onOptionsItemSelected(item);
+        }
+    }
 }
