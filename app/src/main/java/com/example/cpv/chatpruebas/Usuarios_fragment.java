@@ -29,7 +29,7 @@ import java.util.ArrayList;
  * Use the {@link Usuarios_fragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class Usuarios_fragment extends Fragment {
+public class Usuarios_fragment extends Fragment implements Sin_chats.OnFragmentInteractionListener {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -74,17 +74,20 @@ public class Usuarios_fragment extends Fragment {
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
 
-        Bundle extras=this.getArguments();
-        numero=extras.getString("numero");
-        nombre=extras.getString("nombre");
-        actualizarChat();
     }
+
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.usuarios_layaout, container, false);
+        View v=inflater.inflate(R.layout.usuarios_layaout, container, false);
+        Bundle extras=this.getArguments();
+        numero=extras.getString("numero");
+        nombre=extras.getString("nombre");
+        actualizarChat(v);
+        return v;
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -111,6 +114,11 @@ public class Usuarios_fragment extends Fragment {
         mListener = null;
     }
 
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
+    }
+
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -127,7 +135,7 @@ public class Usuarios_fragment extends Fragment {
     }
 
     //MOSTRAR EL CHAT
-    public void actualizarChat(){
+    public void actualizarChat(final View v){
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference myRef = database.getReference("users/"+numero+"/"+"chats");
         myRef.addValueEventListener(new ValueEventListener() {
@@ -137,7 +145,7 @@ public class Usuarios_fragment extends Fragment {
                 for (DataSnapshot child: dataSnapshot.getChildren()) {
                     chats.add(child.getKey().toString());
                 }
-                restablecerListView(chats);
+                restablecerListView(chats,v);
 
             }
 
@@ -148,11 +156,20 @@ public class Usuarios_fragment extends Fragment {
             }
         });
     }
-    public void restablecerListView(final ArrayList<String> chats){
-        ListView lista = (ListView)getActivity().findViewById(R.id.listview);
-        AdaptadorListaChat adaptador = new AdaptadorListaChat(getActivity(),chats,numero);
-        lista.setAdapter(adaptador);
-        lista.setSelection(chats.size() - 1);
+    public void restablecerListView(final ArrayList<String> chats,View v){
+        ListView lista = (ListView)v.findViewById(R.id.listview);
+        if(chats.size()==0){
+            Sin_chats sinChatsFragmento=new Sin_chats();
+            android.support.v4.app.FragmentManager fm = getActivity().getSupportFragmentManager();
+            android.support.v4.app.FragmentTransaction fragmentTransaction = fm.beginTransaction();
+            fragmentTransaction.replace(R.id.frameLayout3, sinChatsFragmento).addToBackStack(null); //donde fragmentContainer_id es el ID del FrameLayout donde tu Fragment está contenido.
+            fragmentTransaction.commit();
+        }else{
+            AdaptadorListaChat adaptador = new AdaptadorListaChat(getActivity(),chats,numero);
+            lista.setAdapter(adaptador);
+            lista.setSelection(chats.size() - 1);
+        }
+
 
 
         lista.setOnItemClickListener(new AdapterView.OnItemClickListener() {

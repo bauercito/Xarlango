@@ -1,11 +1,14 @@
 package com.example.cpv.chatpruebas;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
@@ -13,16 +16,21 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
+import android.text.Layout;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,27 +43,32 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 
 public class Buscar_contactos extends AppCompatActivity {
-
+    ArrayList<Contacto> telefonos;
+    String estado;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.buscar_contactos);
-        obtenerPermisos();
+
+        telefonos=new ArrayList();
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        new hilo_cargar_contactos().execute();
 
 
     }
 
     //LEER LOS CONTACTOS Y PONERLOS EN EL LISTvIEW
     public void leerContactos() {
-        ArrayList<Contacto> telefonos = new ArrayList();
         String phone = null;
-        Cursor cursor = getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
+        final Cursor cursor = getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
         while (cursor.moveToNext()) {
-            String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+            final String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
             String contactId = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.NAME_RAW_CONTACT_ID));
             String id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
             // get the phone number
-            Cursor pCur = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
+            final Cursor pCur = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
                     ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
                     new String[]{id}, null);
             while (pCur.moveToNext()) {
@@ -63,15 +76,57 @@ public class Buscar_contactos extends AppCompatActivity {
                         pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
             }
             if (phone != null) {
-                telefonos.add(new Contacto(name, phone));
+                //-------------------------------------------------------
+                FirebaseDatabase database = FirebaseDatabase.getInstance();
+                DatabaseReference myRef = database.getReference("users/"+phone+"/estado");
+                final String finalPhone = phone;
+                myRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        estado=dataSnapshot.getValue().toString();
+                        telefonos.add(new Contacto(name, finalPhone,estado));
+                        pCur.close();
+                        cursor.close();
+                        listaContactosLocal_usuariosFireBase(telefonos);
+                    }
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) { }
+                });
             }
-            pCur.close();
-
         }
-        cursor.close();
-        rellenarListaContactos(telefonos);
 
     }
+    //CONTRASTAR CONTACTOS CON USUARIOS DE LA BASE DE DATOS
+    public void listaContactosLocal_usuariosFireBase(final ArrayList<Contacto> contactos){
+
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference myRef = database.getReference("users");
+        myRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                ArrayList<Contacto> listaDefinitivaFireBase=new ArrayList();
+                for (DataSnapshot child : dataSnapshot.getChildren()) {
+                    for (int i=0;i<contactos.size();i++){
+                        if(child.getKey().equalsIgnoreCase(contactos.get(i).getNumero())){
+                            listaDefinitivaFireBase.add(contactos.get(i));
+                        }
+                    }
+                }
+                if(listaDefinitivaFireBase.size()==0){
+                    RelativeLayout rl=(RelativeLayout)findViewById(R.id.sin_contactos);
+                    rl.setVisibility(View.VISIBLE);
+                }else{
+                    rellenarListaContactos(listaDefinitivaFireBase);
+                }
+
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
 
     //RELLENAR LISTVIEW
     public void rellenarListaContactos(final ArrayList<Contacto> listaContactos) {
@@ -83,13 +138,13 @@ public class Buscar_contactos extends AppCompatActivity {
         lista.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String nombreChat = listaContactos.get(position).toString();
-                /*Intent i=new Intent(getApplicationContext(),Chat.class);
-                i.putExtra("nombreChat",nombreChat);
-                i.putExtra("numero_usuario",numero);
-                String nombreDestino[]=nombreChat.split("_");
-                i.putExtra("numero_destino",nombreDestino[1]);
-                startActivity(i);*/
+                String nombre = listaContactos.get(position).getNombre();
+                String telefono = listaContactos.get(position).getNumero();
+                Intent i=new Intent(getApplicationContext(),Perfil.class);
+                i.putExtra("nombre",nombre);
+                i.putExtra("telefono",telefono);
+                i.putExtra("estado",listaContactos.get(position).getEstado());
+                startActivity(i);
             }
         });
     }
@@ -166,10 +221,9 @@ public class Buscar_contactos extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if(dataSnapshot.exists()){
                     String nombre=dataSnapshot.child("nombre").getValue().toString();
+                    String estado=dataSnapshot.child("estado").getValue().toString();
                     String telefono=dataSnapshot.getKey().toString();
-                    iniciarPerfil(nombre,telefono);
-
-                    //Toast.makeText(Buscar_contactos.this, "Existe", Toast.LENGTH_SHORT).show();
+                    iniciarPerfil(nombre,telefono,estado);
                 }else{
                     Toast.makeText(Buscar_contactos.this, "No existe", Toast.LENGTH_SHORT).show();
                 }
@@ -181,10 +235,31 @@ public class Buscar_contactos extends AppCompatActivity {
         });
     }
 
-    public void iniciarPerfil(String nombre,String telefono){
+    public void iniciarPerfil(String nombre,String telefono,String estado){
         Intent i=new Intent(this,Perfil.class);
         i.putExtra("nombre",nombre);
         i.putExtra("telefono",telefono);
+        i.putExtra("estado",estado);
         startActivity(i);
     }
+
+     //hilos
+    private class hilo_cargar_contactos extends AsyncTask<Void, Integer, Void>
+
+    {
+        @Override
+        protected Void doInBackground(Void... params)
+        {
+            obtenerPermisos();
+            return null;
+        }
+        @Override
+        protected void onPostExecute(Void result)
+        {
+            RelativeLayout rl=(RelativeLayout)findViewById(R.id.carga_contactos_layout);
+            rl.setVisibility(View.INVISIBLE);
+
+        }
+    }
+
 }

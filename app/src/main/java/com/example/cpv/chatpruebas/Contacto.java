@@ -3,9 +3,20 @@ package com.example.cpv.chatpruebas;
 public class Contacto {
     String nombre;
     String numero;
-    public Contacto(String nombre,String numero){
+    String estado;
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
+
+    public Contacto(String nombre, String numero,String estado){
         this.nombre=nombre;
         this.numero=numero;
+        this.estado=estado;
     }
 
     public String getNombre() {

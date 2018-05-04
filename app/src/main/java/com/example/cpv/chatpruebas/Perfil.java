@@ -1,11 +1,18 @@
 package com.example.cpv.chatpruebas;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -15,10 +22,12 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.BitSet;
+
 public class Perfil extends AppCompatActivity {
     String nombre;
     String telefono;
-    String descripcion;
+    String estado;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,14 +36,42 @@ public class Perfil extends AppCompatActivity {
         Bundle extras = getIntent().getExtras();
         nombre=extras.getString("nombre");
         telefono=extras.getString("telefono");
+        estado=extras.getString("estado");
 
         TextView nombre_perfil=findViewById(R.id.nombre_perfil);
         TextView telefono_perfil=findViewById(R.id.telefono_perfil);
+        TextView estado_perfil=findViewById(R.id.descripcion_contacto);
 
         nombre_perfil.setText(nombre);
         telefono_perfil.setText(telefono);
+        switch (Integer.parseInt(estado)){
+            case 0:
+                estado_perfil.setText("Disponible");
+                break;
+            case 1:
+                estado_perfil.setText("No disponible");
+                break;
+            case 2:
+                estado_perfil.setText("En una reunion");
+                break;
+            case 3:
+                estado_perfil.setText("De copas");
+                break;
+            case 4:
+                estado_perfil.setText("Estudiando");
+                break;
+            case 5:
+                estado_perfil.setText("No me hables");
+                break;
+            case 6:
+                estado_perfil.setText("Con gente importante");
+                break;
+        }
+
 
         comprobarExisteChat(telefono);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
     }
 
@@ -77,4 +114,6 @@ public class Perfil extends AppCompatActivity {
         TelephonyManager tMgr=(TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         return tMgr.getLine1Number();
     }
+
+
 }
