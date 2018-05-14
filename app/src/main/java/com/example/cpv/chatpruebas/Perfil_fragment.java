@@ -9,6 +9,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -16,6 +18,8 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.app.AlertDialog;
 import android.telephony.TelephonyManager;
 import android.view.LayoutInflater;
@@ -24,6 +28,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -35,6 +40,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -42,8 +48,12 @@ import com.google.firebase.storage.UploadTask;
 import org.w3c.dom.Text;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
+
+import uk.co.senab.photoview.PhotoViewAttacher;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -103,7 +113,6 @@ public class Perfil_fragment extends Fragment {
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
 
-
     }
 
     @Override
@@ -117,14 +126,14 @@ public class Perfil_fragment extends Fragment {
         telefono=extras.getString("numero");
         descripcion=extras.getString("estado");
 
+        zoomImage(v);
+
         Spinner spinner_estados = (Spinner) v.findViewById(R.id.descripcion_contacto);
         ArrayAdapter spinner_adapter = ArrayAdapter.createFromResource( getContext(), R.array.estados , android.R.layout.simple_spinner_item);
         spinner_adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner_estados.setAdapter(spinner_adapter);
 
         TextView telefono_perfil=v.findViewById(R.id.telefono_perfil);
-
-
         telefono_perfil.setText(telefono);
 
 
@@ -331,7 +340,9 @@ public class Perfil_fragment extends Fragment {
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
-                // Handle unsuccessful uploads
+                ImageView foto_perfil=getView().findViewById(R.id.imageView);
+                foto_perfil.setImageResource(R.drawable.aspa);
+                Toast.makeText(getActivity(), "Fallo en la subida de la foto, intentelo de nuevo", Toast.LENGTH_LONG).show();
             }
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
@@ -342,6 +353,33 @@ public class Perfil_fragment extends Fragment {
         });
     }
     public void foto_perfil(View v){
+        //RECUPERO LA FOTO DE FIREBASE
+        StorageReference storageRef =FirebaseStorage.getInstance().getReference();
+        StorageReference Ref = storageRef.child(telefono+".jpg");
+
+        final long ONE_MEGABYTE = 1024 * 1024;
+        Ref.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+            @Override
+            public void onSuccess(byte[] bytes) {
+                Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                ImageView image = (ImageView) getView().findViewById(R.id.imageView);
+                image.setImageDrawable(redondear_imagen(bmp));
+                //image.setImageBitmap(Bitmap.createScaledBitmap(bmp, image.getWidth(),image.getHeight(), false));
+                getView().findViewById(R.id.carga_perfil_fragment_layout).setVisibility(View.INVISIBLE);
+                getView().findViewById(R.id.imageView).setVisibility(View.VISIBLE);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                ImageView image = (ImageView) getView().findViewById(R.id.imageView);
+                Bitmap bmp = ((BitmapDrawable)image.getDrawable()).getBitmap();
+                image.setImageDrawable(redondear_imagen(bmp));
+                //image.setImageBitmap(Bitmap.createScaledBitmap(bmp, image.getWidth(),image.getHeight(), false));
+                getView().findViewById(R.id.carga_perfil_fragment_layout).setVisibility(View.INVISIBLE);
+                getView().findViewById(R.id.imageView).setVisibility(View.VISIBLE);
+            }
+        });
+
         //pongo a la escucha imagen para hacer fotos
         ImageView image_camera=(ImageView)v.findViewById(R.id.camera);
         image_camera.setOnClickListener(new View.OnClickListener() {
@@ -409,5 +447,38 @@ public class Perfil_fragment extends Fragment {
             }
 
         }
+    }
+
+    public RoundedBitmapDrawable redondear_imagen(Bitmap image){
+        //creamos el drawable redondeado
+        RoundedBitmapDrawable roundedDrawable =
+                RoundedBitmapDrawableFactory.create(getResources(), image);
+
+        //asignamos el CornerRadius
+        roundedDrawable.setCornerRadius(image.getHeight());
+
+        return roundedDrawable;
+    }
+    public void zoomImage(final View view){
+        final ImageView image=(ImageView)view.findViewById(R.id.imageView);
+        image.setOnClickListener(new View.OnClickListener() {
+            boolean isImageFitToScreen;
+            @Override
+            public void onClick(View v) {
+
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setDataAndType(Uri.parse("android.resource://com.example.cpv.chatpruebas/" + R.id.imageView), "image/jpeg");
+                intent.putExtra(Intent.EXTRA_STREAM, "android.resource://com.example.cpv.chatpruebas/");
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.setType("image/jpeg");
+                view.getContext().startActivity(intent);
+                /*PhotoViewAttacher pAttacher;
+                pAttacher = new PhotoViewAttacher(image);
+                pAttacher.update();*/
+
+            }
+        });
+
+
     }
 }

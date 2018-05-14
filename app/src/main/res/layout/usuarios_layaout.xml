@@ -12,4 +12,29 @@
         android:id="@+id/listview"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <RelativeLayout
+        android:id="@+id/carga_chats_layout"
+        android:layout_width="352dp"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:alpha="0.5"
+        android:background="@drawable/rounded_chats_layout">
+
+        <pl.droidsonroids.gif.GifTextView
+            android:id="@+id/gifTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="190dp"
+            android:alpha="1"
+            android:background="@drawable/loading6" />
+
+    </RelativeLayout>
 </FrameLayout>

@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -158,6 +159,7 @@ public class Usuarios_fragment extends Fragment implements Sin_chats.OnFragmentI
     }
     public void restablecerListView(final ArrayList<String> chats,View v){
         ListView lista = (ListView)v.findViewById(R.id.listview);
+        lista.setDivider(null);
         if(chats.size()==0){
             Sin_chats sinChatsFragmento=new Sin_chats();
             android.support.v4.app.FragmentManager fm = getActivity().getSupportFragmentManager();
@@ -169,6 +171,8 @@ public class Usuarios_fragment extends Fragment implements Sin_chats.OnFragmentI
             lista.setAdapter(adaptador);
             lista.setSelection(chats.size() - 1);
         }
+        RelativeLayout tl=(RelativeLayout)v.findViewById(R.id.carga_chats_layout);
+        tl.setVisibility(View.INVISIBLE);
 
 
 

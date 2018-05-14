@@ -28,6 +28,7 @@ import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -75,7 +76,7 @@ public class Buscar_contactos extends AppCompatActivity {
                 phone = pCur.getString(
                         pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
             }
-            if (phone != null) {
+            if (phone != null && !phone.contains(".")&&!phone.contains("#")&&!phone.contains("$")&&!phone.contains("[")&&!phone.contains("]")) {
                 //-------------------------------------------------------
                 FirebaseDatabase database = FirebaseDatabase.getInstance();
                 DatabaseReference myRef = database.getReference("users/"+phone+"/estado");
@@ -83,16 +84,20 @@ public class Buscar_contactos extends AppCompatActivity {
                 myRef.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        estado=dataSnapshot.getValue().toString();
-                        telefonos.add(new Contacto(name, finalPhone,estado));
-                        pCur.close();
-                        cursor.close();
-                        listaContactosLocal_usuariosFireBase(telefonos);
+                        if(dataSnapshot.exists()){
+                            estado=dataSnapshot.getValue().toString();
+                            telefonos.add(new Contacto(name, finalPhone,estado));
+                            pCur.close();
+                            //cursor.close();
+                            listaContactosLocal_usuariosFireBase(telefonos);
+                        }
+
                     }
                     @Override
                     public void onCancelled(DatabaseError databaseError) { }
                 });
             }
+            pCur.close();
         }
 
     }
@@ -131,6 +136,7 @@ public class Buscar_contactos extends AppCompatActivity {
     //RELLENAR LISTVIEW
     public void rellenarListaContactos(final ArrayList<Contacto> listaContactos) {
         ListView lista = findViewById(R.id.lista_contactos01);
+        lista.setDivider(null);
         AdaptadorListaContactos adaptador = new AdaptadorListaContactos(this, listaContactos);
         lista.setAdapter(adaptador);
 
@@ -251,6 +257,7 @@ public class Buscar_contactos extends AppCompatActivity {
         protected Void doInBackground(Void... params)
         {
             obtenerPermisos();
+            Log.d("PROBLEMAS","ESTOY AKI");
             return null;
         }
         @Override

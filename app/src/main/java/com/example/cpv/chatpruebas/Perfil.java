@@ -5,10 +5,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
 import android.view.View;
@@ -16,11 +19,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.util.BitSet;
 
@@ -37,6 +44,8 @@ public class Perfil extends AppCompatActivity {
         nombre=extras.getString("nombre");
         telefono=extras.getString("telefono");
         estado=extras.getString("estado");
+
+        cargarFoto();
 
         TextView nombre_perfil=findViewById(R.id.nombre_perfil);
         TextView telefono_perfil=findViewById(R.id.telefono_perfil);
@@ -98,6 +107,9 @@ public class Perfil extends AppCompatActivity {
                     if(child.getKey().equalsIgnoreCase(telefono_perfil+"_"+telefonoPropio)||child.getKey().equalsIgnoreCase(telefonoPropio+"_"+telefono_perfil)){
                         findViewById(R.id.abrirChat).setVisibility(View.INVISIBLE);
                         findViewById(R.id.chatAbierto).setVisibility(View.VISIBLE);
+                    }else{
+                        findViewById(R.id.abrirChat).setVisibility(View.VISIBLE);
+                        findViewById(R.id.chatAbierto).setVisibility(View.INVISIBLE);
                     }
                 }
             }
@@ -113,6 +125,46 @@ public class Perfil extends AppCompatActivity {
     public String getTelefonoPropio(){
         TelephonyManager tMgr=(TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         return tMgr.getLine1Number();
+    }
+
+    //CARGAR LA FOTO EN EL IMAGEVIEW
+    public void cargarFoto(){
+        //RECUPERO LA FOTO DE FIREBASE
+        StorageReference storageRef =FirebaseStorage.getInstance().getReference();
+        StorageReference Ref = storageRef.child(telefono+".jpg");
+        final long ONE_MEGABYTE = 1024 * 1024;
+        Ref.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+            @Override
+            public void onSuccess(byte[] bytes) {
+                Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                ImageView image = (ImageView) findViewById(R.id.imageView);
+                image.setImageDrawable(redondear_imagen(bmp));
+                //image.setImageBitmap(Bitmap.createScaledBitmap(bmp, image.getWidth(),image.getHeight(), false));
+                findViewById(R.id.carga_perfil_layout).setVisibility(View.INVISIBLE);
+                findViewById(R.id.imageView).setVisibility(View.VISIBLE);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                findViewById(R.id.carga_perfil_layout).setVisibility(View.INVISIBLE);
+                ImageView image = (ImageView) findViewById(R.id.imageView);
+                image.buildDrawingCache();
+                Bitmap bmap = image.getDrawingCache();
+                image.setImageDrawable(redondear_imagen(bmap));
+                image.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+    //redondear imagen
+    public RoundedBitmapDrawable redondear_imagen(Bitmap image){
+        //creamos el drawable redondeado
+        RoundedBitmapDrawable roundedDrawable =
+                RoundedBitmapDrawableFactory.create(getResources(), image);
+
+        //asignamos el CornerRadius
+        roundedDrawable.setCornerRadius(image.getHeight());
+
+        return roundedDrawable;
     }
 
 

@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.google.firebase.database.FirebaseDatabase;
@@ -36,6 +37,8 @@ public class AdaptadorListaContactos extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
+        RelativeLayout rl=(RelativeLayout)actividad.findViewById(R.id.carga_contactos_layout);
+        rl.bringToFront();
         View v = convertView;
         if (convertView == null) {
             LayoutInflater inf = (LayoutInflater) actividad.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
