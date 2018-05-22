@@ -4,4 +4,7 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
     <color name="gris_carga">#E0E0E0</color>
+    <color name="fondo_estandar">#5000AF</color>
+    <color name="fondo2">#23B0A8</color>
+
 </resources>

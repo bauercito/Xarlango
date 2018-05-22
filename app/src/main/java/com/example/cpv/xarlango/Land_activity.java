@@ -1,19 +1,21 @@
-package com.example.cpv.chatpruebas;
+package com.example.cpv.xarlango;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.media.Image;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,6 +25,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 
+import com.example.cpv.chatpruebas.R;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -35,11 +38,36 @@ public class Land_activity extends AppCompatActivity implements Usuarios_fragmen
     TelephonyManager tMgr;
     String nombre;
     String estado;
+    private BroadcastReceiver mMessageReceiver = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.land_activity);
+
+        //ACTIVAR SERVICIO
+        Intent intent = new Intent(this, Service_conexionPermanente.class);
+        startService(intent);
+
+        Intent intent2 = new Intent(this, servicio_notificaciones.class);
+        startService(intent2);
+
+        //RECIBO MENSAJE DE DESCONEXION
+            mMessageReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+
+                Conexion_dialog dialog = new Conexion_dialog();
+                dialog.setCancelable(false);
+                dialog.show(getFragmentManager(),"tag");
+            }
+        };
+
+        //PONER FONDO A LA TOOLBAR
+        BitmapDrawable background = new BitmapDrawable(
+                BitmapFactory.decodeResource(getResources(),
+                        R.drawable.fondo_estandar));
+        getSupportActionBar().setBackgroundDrawable(background);
 
 
         tMgr=(TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
@@ -56,7 +84,30 @@ public class Land_activity extends AppCompatActivity implements Usuarios_fragmen
             fragmentTransaction.commit();
     }
 
+    @Override
+    public void onResume() {
+        servicio_notificaciones.ESTADOAPP=false;
+        super.onResume();
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("EVENT_SNACKBAR"));
+    }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        servicio_notificaciones.ESTADOAPP=true;
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
+    }
+
+    @Override
+    protected void onDestroy() {
+        //startService(new Intent(this, NotificationService.class));
+        super.onDestroy();
+    }
 
     // 1º CONSIGO EL NUMERO DE TELEFONO DEL USUARIO
     public void getTelefono() {
@@ -94,7 +145,7 @@ public class Land_activity extends AppCompatActivity implements Usuarios_fragmen
                 for (DataSnapshot child : dataSnapshot.getChildren()) {
                     if(child.getKey().equalsIgnoreCase(numero)){
                         nombre=child.child("nombre").getValue().toString();
-                        estado=child.child("estado").getValue().toString();
+                        //estado=child.child("estado").getValue().toString();
                         return;
                     }
                 }
@@ -116,7 +167,7 @@ public class Land_activity extends AppCompatActivity implements Usuarios_fragmen
         alertDialogBuilder.setView(promptView);
         alertDialogBuilder.setCancelable(false);
         final EditText editText = (EditText) promptView.findViewById(R.id.nombre_usuario);
-        final EditText estadoEditText = (EditText) promptView.findViewById(R.id.estado_usuario);
+        //final EditText estadoEditText = (EditText) promptView.findViewById(R.id.estado_usuario);
         ImageView empezarImagen=(ImageView) promptView.findViewById(R.id.boton_empezar);
         final AlertDialog alert = alertDialogBuilder.create();
         alert.show();
@@ -125,11 +176,9 @@ public class Land_activity extends AppCompatActivity implements Usuarios_fragmen
             public void onClick(View v) {
                 if(editText.getText().toString().equals("")){
                     editText.setHint("Introduce un nombre!");
-                }else if(estadoEditText.getText().toString().equals("")){
-                    estadoEditText.setHint("¡Cuentanos algo!");
                 }else{
                     nombre=editText.getText().toString();
-                    estado=estadoEditText.getText().toString();
+                    //estado=estadoEditText.getText().toString();
                     registrarUsuario();
                     alert.cancel();
                 }
@@ -144,7 +193,7 @@ public class Land_activity extends AppCompatActivity implements Usuarios_fragmen
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference myRef = database.getReference("users/"+numero);
         myRef.child("nombre").setValue(nombre);
-        myRef.child("estado").setValue(estado);
+        myRef.child("estado").setValue("0");
 
 
     }
@@ -161,6 +210,8 @@ public class Land_activity extends AppCompatActivity implements Usuarios_fragmen
         android.support.v4.app.FragmentTransaction fragmentTransaction = fm.beginTransaction();
         fragmentTransaction.replace(R.id.frameLayout3, perfilFragmento).addToBackStack(null); //donde fragmentContainer_id es el ID del FrameLayout donde tu Fragment está contenido.
         fragmentTransaction.commit();
+        findViewById(R.id.imageView3).setBackgroundResource(R.drawable.rounded_imagen);
+        findViewById(R.id.imageView2).setBackgroundResource(R.drawable.sin_rounded_imagen);
     }
     public void chat(View v){
         Usuarios_fragment listaFragmento=new Usuarios_fragment();
@@ -172,6 +223,8 @@ public class Land_activity extends AppCompatActivity implements Usuarios_fragmen
         android.support.v4.app.FragmentTransaction fragmentTransaction = fm.beginTransaction();
         fragmentTransaction.replace(R.id.frameLayout3, listaFragmento); //donde fragmentContainer_id es el ID del FrameLayout donde tu Fragment está contenido.
         fragmentTransaction.commit();
+        findViewById(R.id.imageView2).setBackgroundResource(R.drawable.rounded_imagen);
+        findViewById(R.id.imageView3).setBackgroundResource(R.drawable.sin_rounded_imagen);
     }
 
 //---------------------------------------------------------------------------------

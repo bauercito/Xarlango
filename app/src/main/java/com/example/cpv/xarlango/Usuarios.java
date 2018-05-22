@@ -1,14 +1,18 @@
-package com.example.cpv.chatpruebas;
+package com.example.cpv.xarlango;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
@@ -18,12 +22,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.cpv.chatpruebas.R;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -36,16 +39,50 @@ public class Usuarios extends AppCompatActivity {
     String numero;
     TelephonyManager tMgr;
     String nombre;
+    private BroadcastReceiver mMessageReceiver = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.usuarios);
 
+        //RECIBO MENSAJE DE DESCONEXION
+        mMessageReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+
+                Conexion_dialog dialog = new Conexion_dialog();
+                dialog.setCancelable(false);
+                dialog.show(getFragmentManager(),"tag");
+            }
+        };
+        //PONER FONDO A LA TOOLBAR
+        BitmapDrawable background = new BitmapDrawable(
+                BitmapFactory.decodeResource(getResources(),
+                        R.drawable.fondo_estandar));
+        getSupportActionBar().setBackgroundDrawable(background);
 
         tMgr=(TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         getTelefono();
         buscarUsuario();
         actualizarChat();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        servicio_notificaciones.ESTADOAPP=false;
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("EVENT_SNACKBAR"));
+    }
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Extras.ESTADOAPP=true;
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
+    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        servicio_notificaciones.ESTADOAPP=true;
     }
 
     //MOSTRAR EL CHAT

@@ -1,23 +1,21 @@
-package com.example.cpv.chatpruebas;
+package com.example.cpv.xarlango;
 
 import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.app.AlertDialog;
@@ -28,11 +26,11 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.cpv.chatpruebas.R;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
@@ -40,20 +38,13 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
-import org.w3c.dom.Text;
-
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
-
-import uk.co.senab.photoview.PhotoViewAttacher;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -116,6 +107,18 @@ public class Perfil_fragment extends Fragment {
     }
 
     @Override
+    public void onResume() {
+        servicio_notificaciones.ESTADOAPP=false;
+        super.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        servicio_notificaciones.ESTADOAPP=true;
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -126,7 +129,7 @@ public class Perfil_fragment extends Fragment {
         telefono=extras.getString("numero");
         descripcion=extras.getString("estado");
 
-        zoomImage(v);
+
 
         Spinner spinner_estados = (Spinner) v.findViewById(R.id.descripcion_contacto);
         ArrayAdapter spinner_adapter = ArrayAdapter.createFromResource( getContext(), R.array.estados , android.R.layout.simple_spinner_item);
@@ -139,7 +142,10 @@ public class Perfil_fragment extends Fragment {
 
         getNombre_estado(v);
         modificar(v);
-        foto_perfil(v);
+        if(Service_conexionPermanente.isOnline(getContext())){
+            foto_perfil(v);
+        }
+
         comprobarExisteChat(telefono,v);
         return v;
     }
@@ -224,21 +230,6 @@ public class Perfil_fragment extends Fragment {
         return tMgr.getLine1Number();
     }
 
-    //EVENTOS ONCLICK
-    /*public void modificar_nombre(View v){
-        ImageView modifyNombre=(ImageView)v.findViewById(R.id.modificar_nombre);
-        modifyNombre.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getDialog("Nombre",v);
-
-            }
-        });
-
-    }*/
-    /*public void modificar_estado(){
-
-    }*/
     //MOSTRAR DIALOG DE CONFIRMACION
     public void createDialogConfirm(final String nombre, final int estado){
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
@@ -274,13 +265,13 @@ public class Perfil_fragment extends Fragment {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                String nombre=dataSnapshot.child("nombre").getValue().toString();
-               String estado=dataSnapshot.child("estado").getValue().toString();
+               //String estado=dataSnapshot.child("estado").getValue().toString();
 
                 EditText nombre_perfil=v.findViewById(R.id.nombre_perfil);
                 Spinner estado_perfil=v.findViewById(R.id.descripcion_contacto);
 
                 nombre_perfil.setText(nombre);
-                estado_perfil.setSelection(Integer.parseInt(descripcion));
+                //estado_perfil.setSelection(Integer.parseInt(descripcion));
                 //estado_perfil.setText(descripcion);
 
 
@@ -358,25 +349,25 @@ public class Perfil_fragment extends Fragment {
         StorageReference Ref = storageRef.child(telefono+".jpg");
 
         final long ONE_MEGABYTE = 1024 * 1024;
+        final ImageView image = (ImageView) v.findViewById(R.id.imageView);
         Ref.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
             @Override
             public void onSuccess(byte[] bytes) {
                 Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                ImageView image = (ImageView) getView().findViewById(R.id.imageView);
+
                 image.setImageDrawable(redondear_imagen(bmp));
                 //image.setImageBitmap(Bitmap.createScaledBitmap(bmp, image.getWidth(),image.getHeight(), false));
-                getView().findViewById(R.id.carga_perfil_fragment_layout).setVisibility(View.INVISIBLE);
-                getView().findViewById(R.id.imageView).setVisibility(View.VISIBLE);
+                image.getRootView().findViewById(R.id.carga_perfil_fragment_layout).setVisibility(View.INVISIBLE);
+                image.getRootView().findViewById(R.id.imageView).setVisibility(View.VISIBLE);
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
-                ImageView image = (ImageView) getView().findViewById(R.id.imageView);
                 Bitmap bmp = ((BitmapDrawable)image.getDrawable()).getBitmap();
                 image.setImageDrawable(redondear_imagen(bmp));
                 //image.setImageBitmap(Bitmap.createScaledBitmap(bmp, image.getWidth(),image.getHeight(), false));
-                getView().findViewById(R.id.carga_perfil_fragment_layout).setVisibility(View.INVISIBLE);
-                getView().findViewById(R.id.imageView).setVisibility(View.VISIBLE);
+                image.getRootView().findViewById(R.id.carga_perfil_fragment_layout).setVisibility(View.INVISIBLE);
+                image.getRootView().findViewById(R.id.imageView).setVisibility(View.VISIBLE);
             }
         });
 
@@ -459,26 +450,5 @@ public class Perfil_fragment extends Fragment {
 
         return roundedDrawable;
     }
-    public void zoomImage(final View view){
-        final ImageView image=(ImageView)view.findViewById(R.id.imageView);
-        image.setOnClickListener(new View.OnClickListener() {
-            boolean isImageFitToScreen;
-            @Override
-            public void onClick(View v) {
 
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setDataAndType(Uri.parse("android.resource://com.example.cpv.chatpruebas/" + R.id.imageView), "image/jpeg");
-                intent.putExtra(Intent.EXTRA_STREAM, "android.resource://com.example.cpv.chatpruebas/");
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intent.setType("image/jpeg");
-                view.getContext().startActivity(intent);
-                /*PhotoViewAttacher pAttacher;
-                pAttacher = new PhotoViewAttacher(image);
-                pAttacher.update();*/
-
-            }
-        });
-
-
-    }
 }

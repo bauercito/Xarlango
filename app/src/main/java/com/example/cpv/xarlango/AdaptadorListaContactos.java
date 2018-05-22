@@ -1,4 +1,4 @@
-package com.example.cpv.chatpruebas;
+package com.example.cpv.xarlango;
 
 import android.app.Activity;
 import android.content.Context;
@@ -9,7 +9,7 @@ import android.widget.BaseAdapter;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.google.firebase.database.FirebaseDatabase;
+import com.example.cpv.chatpruebas.R;
 
 import java.util.ArrayList;
 

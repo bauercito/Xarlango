@@ -1,4 +1,4 @@
-package com.example.cpv.chatpruebas;
+package com.example.cpv.xarlango;
 
 public class Contacto {
     String nombre;

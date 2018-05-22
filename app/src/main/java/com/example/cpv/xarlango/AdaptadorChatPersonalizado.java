@@ -1,4 +1,4 @@
-package com.example.cpv.chatpruebas;
+package com.example.cpv.xarlango;
 
 import android.content.Context;
 import android.support.v7.widget.CardView;
@@ -14,6 +14,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.example.cpv.chatpruebas.R;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;

@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/fondo1"
-    tools:context=".Land_activity"
+    tools:context="com.example.cpv.xarlango.Land_activity"
     tools:layout_editor_absoluteY="81dp">
 
     <FrameLayout
@@ -36,11 +36,13 @@
         android:layout_marginStart="60dp"
         android:layout_marginTop="8dp"
         android:onClick="chat"
+        android:background="@drawable/rounded_imagen"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.954"
         app:srcCompat="@drawable/icon_message" />
+
 
     <ImageView
         android:id="@+id/imageView3"

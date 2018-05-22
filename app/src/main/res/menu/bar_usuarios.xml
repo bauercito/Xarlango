@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".Usuarios">
+    tools:context="com.example.cpv.xarlango.Usuarios">
     <item android:id="@+id/aniadirUsuario"
         android:title="añadir"
         android:icon="@drawable/serch_user"

@@ -1,15 +1,15 @@
-package com.example.cpv.chatpruebas;
+package com.example.cpv.xarlango;
 
-import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.app.AppCompatActivity;
@@ -17,8 +17,8 @@ import android.telephony.TelephonyManager;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import com.example.cpv.chatpruebas.R;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
@@ -29,16 +29,31 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
-import java.util.BitSet;
-
 public class Perfil extends AppCompatActivity {
     String nombre;
     String telefono;
     String estado;
+    private BroadcastReceiver mMessageReceiver = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.perfil);
+
+        //RECIBO MENSAJE DE DESCONEXION
+        mMessageReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+
+                Conexion_dialog dialog = new Conexion_dialog();
+                dialog.setCancelable(false);
+                dialog.show(getFragmentManager(),"tag");
+            }
+        };
+
+        BitmapDrawable background = new BitmapDrawable(
+                BitmapFactory.decodeResource(getResources(),
+                        R.drawable.fondo_estandar));
+        getSupportActionBar().setBackgroundDrawable(background);
 
         Bundle extras = getIntent().getExtras();
         nombre=extras.getString("nombre");
@@ -82,6 +97,24 @@ public class Perfil extends AppCompatActivity {
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        servicio_notificaciones.ESTADOAPP=false;
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("EVENT_SNACKBAR"));
+    }
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Extras.ESTADOAPP=true;
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
+    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        servicio_notificaciones.ESTADOAPP=true;
     }
 
     //ABRO NUEVO CHAT CON EL BUTTON

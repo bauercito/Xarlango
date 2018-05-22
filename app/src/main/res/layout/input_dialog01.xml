@@ -4,47 +4,35 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="#23B0A8"
     android:orientation="vertical"
     android:padding="10dp">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Antes de empezar necesitamos saber algo sobre ti!"
-         />
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="¿Tu nombre?"
-         />
+        android:layout_gravity="center"
+        android:text="Antes de empezar, ¿Cual es tu nombre?"
+        android:textSize="20dp"
+        android:textStyle="bold"
+        android:textAlignment="center"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <EditText
         android:id="@+id/nombre_usuario"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:hint="Enter text here.."
-        android:padding="10dp" />
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Cuentanos algo sobre ti!"
-         />
-    <EditText
-        android:id="@+id/estado_usuario"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:hint="Enter text here.."
+        android:hint="Tu nombre"
+        android:layout_margin="20dp"
+        android:background="@drawable/format_edittext"
         android:padding="10dp" />
 
     <ImageView
         android:id="@+id/boton_empezar"
-        android:onClick="empezar"
-        android:layout_gravity="center"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:srcCompat="@drawable/empezar_land"
-        android:layout_margin="15dp"/>
+        android:layout_gravity="center"
+        android:layout_margin="15dp"
+        android:onClick="empezar"
+        app:srcCompat="@drawable/empezar_land" />
 </LinearLayout>

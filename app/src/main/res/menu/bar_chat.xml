@@ -5,13 +5,8 @@
     tools:context="com.example.cpv.xarlango.Usuarios"
     >
 
-    <item android:id="@+id/searchUsuario"
-        android:title="añadir"
-        android:icon="@drawable/aniadir_usuarios"
-        app:showAsAction="always">
-    </item>
-    <item android:id="@+id/ayuda"
-        android:title="Ayuda"
+    <item android:id="@+id/perfil"
+        android:title="Ver perfil"
         app:showAsAction="never">
     </item>
 </menu>

@@ -1,4 +1,4 @@
-package com.example.cpv.chatpruebas;
+package com.example.cpv.xarlango;
 
 import android.content.Context;
 import android.content.Intent;
@@ -13,6 +13,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 
+import com.example.cpv.chatpruebas.R;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -77,7 +78,17 @@ public class Usuarios_fragment extends Fragment implements Sin_chats.OnFragmentI
 
     }
 
+    @Override
+    public void onResume() {
+        servicio_notificaciones.ESTADOAPP=false;
+        super.onResume();
+    }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        servicio_notificaciones.ESTADOAPP=true;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
