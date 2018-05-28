@@ -8,7 +8,9 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.media.AudioManager;
 import android.media.Image;
+import android.media.MediaPlayer;
 import android.os.StrictMode;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
@@ -17,6 +19,7 @@ import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -59,11 +62,16 @@ public class Chat extends AppCompatActivity {
     String[] hora_contacto;
     ArrayList<String> hora;
     private BroadcastReceiver mMessageReceiver = null;
+    TelephonyManager tMgr;
+    String numeroPropio;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.chat);
+
+        tMgr=(TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        getTelefono();
 
         //RECIBO MENSAJE DE DESCONEXION
         mMessageReceiver = new BroadcastReceiver() {
@@ -90,6 +98,20 @@ public class Chat extends AppCompatActivity {
         LayoutInflater mInflater = LayoutInflater.from(getApplicationContext());
         View mCustomView = mInflater.inflate(R.layout.toolbar_custom, null);
         getSupportActionBar().setCustomView(mCustomView);
+
+        //PONER FOTO Y NOMBRE PERFIL A LA ESCUCHA PARA ABRIR PERFIL
+        mCustomView.findViewById(R.id.fotoPerfil_circular).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                cargarPerfilDesdeFoto();
+            }
+        });
+        mCustomView.findViewById(R.id.nombre_toolbar).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                cargarPerfilDesdeFoto();
+            }
+        });
 
 
         //recoger datos
@@ -154,7 +176,7 @@ public class Chat extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        Extras.ESTADOAPP=true;
+        Extras.ESTADOAPP=false;
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
     }
     @Override
@@ -164,9 +186,6 @@ public class Chat extends AppCompatActivity {
     }
 
     public void restablecerListView(ArrayList<String> palabras,ArrayList<String> persona,ArrayList<String> hora) {
-        /*RecyclerView vista=(RecyclerView)findViewById(R.id.recyclerView);
-        vista.setLayoutManager(new LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false));
-        vista.setAdapter(new AdaptadorRecycleChat(palabras,persona,numeroOrigen,this,hora));*/
 
         adaptador=new AdaptadorChatPersonalizado(palabras,persona,numeroOrigen,this,hora);
 
@@ -180,7 +199,7 @@ public class Chat extends AppCompatActivity {
         TextView input = findViewById(R.id.texto1);
         if(input.getText().toString().equalsIgnoreCase("")){
             Toast toast = Toast.makeText(getApplicationContext(), "Escribe algo!", Toast.LENGTH_SHORT);
-            toast.setGravity(Gravity.TOP,0,0);
+            toast.setGravity(Gravity.CENTER,0,0);
             toast.show();
         }else{
             //Se crea el chat en message
@@ -194,6 +213,11 @@ public class Chat extends AppCompatActivity {
             myRef01.setValue(obtenerFecha2());
             DatabaseReference myRef02 = database.getReference("users/" + numeroDestino + "/chats/" + nombreChat + "/" + "ultimo_uso");
             myRef02.setValue(obtenerFecha2());
+
+           /* //se introduce sonido
+            MediaPlayer mediaPlayer;
+            mediaPlayer = MediaPlayer.create(this, R.raw.pop);
+            mediaPlayer.start();*/
 
             input.setText("");
         }
@@ -238,7 +262,13 @@ public class Chat extends AppCompatActivity {
     }
     public void obtenerNombreDestino(){
         FirebaseDatabase database02 = FirebaseDatabase.getInstance();
-        DatabaseReference myRef02 = database02.getReference("users/" +numeroDestino+"/nombre");
+        DatabaseReference myRef02=null;
+        String[] telefonosPorSeperado=nombreChat.split("_");
+        if(numeroPropio.equalsIgnoreCase(telefonosPorSeperado[0])){
+            myRef02 = database02.getReference("users/" +telefonosPorSeperado[1]+"/nombre");
+        }else{
+            myRef02 = database02.getReference("users/" +telefonosPorSeperado[0]+"/nombre");
+        }
         myRef02.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -254,7 +284,14 @@ public class Chat extends AppCompatActivity {
     public void cargarFotoDestino(){
         //RECUPERO LA FOTO DE FIREBASE
         StorageReference storageRef = FirebaseStorage.getInstance().getReference();
-        StorageReference Ref = storageRef.child(numeroDestino+".jpg");
+        String[] telefonosPorSeperado=nombreChat.split("_");
+        StorageReference Ref ;
+        if(numeroPropio.equalsIgnoreCase(telefonosPorSeperado[0])){
+            Ref = storageRef.child(telefonosPorSeperado[1]+".jpg");
+        }else{
+            Ref = storageRef.child(telefonosPorSeperado[0]+".jpg");
+        }
+
         final long ONE_MEGABYTE = 1024 * 1024;
         Ref.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
             @Override
@@ -303,7 +340,15 @@ public class Chat extends AppCompatActivity {
         int id=item.getItemId();
         if(id==R.id.perfil){
             FirebaseDatabase database02 = FirebaseDatabase.getInstance();
-            DatabaseReference myRef02 = database02.getReference("users/" +numeroDestino);
+            DatabaseReference myRef02=null;
+            String[] telefonosPorSeperado=nombreChat.split("_");
+            if(numeroPropio.equalsIgnoreCase(telefonosPorSeperado[0])){
+                myRef02 = database02.getReference("users/" +telefonosPorSeperado[1]);
+                numeroDestino=telefonosPorSeperado[1];
+            }else{
+                myRef02 = database02.getReference("users/" +telefonosPorSeperado[0]);
+                numeroDestino=telefonosPorSeperado[0];
+            }
             myRef02.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
@@ -325,6 +370,41 @@ public class Chat extends AppCompatActivity {
         }else{
             return super.onOptionsItemSelected(item);
         }
+    }
+    //recuperar telefono propio
+    public void getTelefono(){
+        numeroPropio= tMgr.getLine1Number();
+        //LANZO EL SERVICIO DE NOTIFICACIONES
+        Intent intent2 = new Intent(this, servicio_notificaciones.class);
+        startService(intent2);
+    }
+    public void cargarPerfilDesdeFoto(){
+        FirebaseDatabase database02 = FirebaseDatabase.getInstance();
+        DatabaseReference myRef02=null;
+        String[] telefonosPorSeperado=nombreChat.split("_");
+        if(numeroPropio.equalsIgnoreCase(telefonosPorSeperado[0])){
+            myRef02 = database02.getReference("users/" +telefonosPorSeperado[1]);
+            numeroDestino=telefonosPorSeperado[1];
+        }else{
+            myRef02 = database02.getReference("users/" +telefonosPorSeperado[0]);
+            numeroDestino=telefonosPorSeperado[0];
+        }
+        myRef02.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String nombre=dataSnapshot.child("nombre").getValue().toString();
+                String estado=dataSnapshot.child("estado").getValue().toString();
+
+                Intent i=new Intent(getApplicationContext(),Perfil.class);
+                i.putExtra("nombre",nombre);
+                i.putExtra("telefono",numeroDestino);
+                i.putExtra("estado",estado);
+                startActivity(i);
+
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) { }
+        });
     }
 
 }

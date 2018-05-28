@@ -108,14 +108,17 @@ public class Buscar_contactos extends AppCompatActivity {
             }
             if (phone != null && !phone.contains(".")&&!phone.contains("#")&&!phone.contains("$")&&!phone.contains("[")&&!phone.contains("]")) {
                 //-------------------------------------------------------
+                if (!phone.contains("+34")) {
+                    phone="+34"+phone;
+                }
                 FirebaseDatabase database = FirebaseDatabase.getInstance();
-                DatabaseReference myRef = database.getReference("users/"+phone+"/estado");
+                DatabaseReference myRef = database.getReference("users/"+phone);
                 final String finalPhone = phone;
                 myRef.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         if(dataSnapshot.exists()){
-                            estado=dataSnapshot.getValue().toString();
+                            estado=dataSnapshot.child("estado").getValue().toString();
                             telefonos.add(new Contacto(name, finalPhone,estado));
                             pCur.close();
                             //cursor.close();
@@ -148,7 +151,7 @@ public class Buscar_contactos extends AppCompatActivity {
                 ArrayList<Contacto> listaDefinitivaFireBase=new ArrayList();
                 for (DataSnapshot child : dataSnapshot.getChildren()) {
                     for (int i=0;i<contactos.size();i++){
-                        if(child.getKey().equalsIgnoreCase(contactos.get(i).getNumero())){
+                        if(child.getKey().equalsIgnoreCase(contactos.get(i).getNumero().trim())||child.getKey().equalsIgnoreCase("+34"+contactos.get(i).getNumero().trim())){
                             listaDefinitivaFireBase.add(contactos.get(i));
                         }
                     }
@@ -158,6 +161,8 @@ public class Buscar_contactos extends AppCompatActivity {
                     rl.setVisibility(View.VISIBLE);
                 }else{
                     rellenarListaContactos(listaDefinitivaFireBase);
+                    RelativeLayout rl=(RelativeLayout)findViewById(R.id.sin_contactos);
+                    rl.setVisibility(View.INVISIBLE);
                 }
 
             }
@@ -273,7 +278,7 @@ public class Buscar_contactos extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if(dataSnapshot.exists()){
                     String nombre=dataSnapshot.child("nombre").getValue().toString();
-                    //String estado=dataSnapshot.child("estado").getValue().toString();
+                    String estado=dataSnapshot.child("estado").getValue().toString();
                     String telefono=dataSnapshot.getKey().toString();
                     iniciarPerfil(nombre,telefono,estado);
                 }else{

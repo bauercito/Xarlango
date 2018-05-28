@@ -49,8 +49,7 @@ public class Land_activity extends AppCompatActivity implements Usuarios_fragmen
         Intent intent = new Intent(this, Service_conexionPermanente.class);
         startService(intent);
 
-        Intent intent2 = new Intent(this, servicio_notificaciones.class);
-        startService(intent2);
+
 
         //RECIBO MENSAJE DE DESCONEXION
             mMessageReceiver = new BroadcastReceiver() {
@@ -82,6 +81,7 @@ public class Land_activity extends AppCompatActivity implements Usuarios_fragmen
             android.support.v4.app.FragmentTransaction fragmentTransaction = fm.beginTransaction();
             fragmentTransaction.replace(R.id.frameLayout3, listaFragmento); //donde fragmentContainer_id es el ID del FrameLayout donde tu Fragment está contenido.
             fragmentTransaction.commit();
+
     }
 
     @Override
@@ -111,7 +111,7 @@ public class Land_activity extends AppCompatActivity implements Usuarios_fragmen
 
     // 1º CONSIGO EL NUMERO DE TELEFONO DEL USUARIO
     public void getTelefono() {
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_NUMBERS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_NUMBERS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.READ_PHONE_STATE},0);
 
         }else{
@@ -121,15 +121,18 @@ public class Land_activity extends AppCompatActivity implements Usuarios_fragmen
     }
     public void setTelefono(){
         numero= tMgr.getLine1Number();
+        //LANZO EL SERVICIO DE NOTIFICACIONES
+        Intent intent2 = new Intent(this, servicio_notificaciones.class);
+        startService(intent2);
     }
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch(0){
-            case 1:
+        switch(requestCode){
+            case 0:
                 if(grantResults.length>0&&grantResults[0]==PackageManager.PERMISSION_GRANTED){
                     setTelefono();
                 }else{
-                    Toast.makeText(this, "Necesitas dar permisos", Toast.LENGTH_SHORT).show();
+                    finish();
                 }
         }
     }
@@ -184,7 +187,13 @@ public class Land_activity extends AppCompatActivity implements Usuarios_fragmen
                 }
             }
         });
-        // create an alert dialog
+        // VENTANA DE SALIR SI NO LO TIENE
+
+        if(numero==null){
+            NoDialog_dialog dialog = new NoDialog_dialog();
+            dialog.setCancelable(false);
+            dialog.show(getFragmentManager(),"tag");
+        }
 
     }
 

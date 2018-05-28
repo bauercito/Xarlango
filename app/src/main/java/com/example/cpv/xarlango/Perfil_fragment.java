@@ -265,12 +265,14 @@ public class Perfil_fragment extends Fragment {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                String nombre=dataSnapshot.child("nombre").getValue().toString();
-               //String estado=dataSnapshot.child("estado").getValue().toString();
+               String estado=dataSnapshot.child("estado").getValue().toString();
 
                 EditText nombre_perfil=v.findViewById(R.id.nombre_perfil);
                 Spinner estado_perfil=v.findViewById(R.id.descripcion_contacto);
 
                 nombre_perfil.setText(nombre);
+                estado_perfil.setSelection(Integer.parseInt(estado));
+
                 //estado_perfil.setSelection(Integer.parseInt(descripcion));
                 //estado_perfil.setText(descripcion);
 

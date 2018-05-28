@@ -1,6 +1,7 @@
 package com.example.cpv.xarlango;
 
 import android.content.Context;
+import android.media.MediaPlayer;
 import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.Gravity;
@@ -76,6 +77,7 @@ public class AdaptadorChatPersonalizado extends BaseAdapter {
         TextView tu=(TextView)v.findViewById(R.id.tu);
         TextView hora_yo=(TextView)v.findViewById(R.id.hora_yo);
         TextView hora_tu=(TextView)v.findViewById(R.id.hora_tu);
+
 
         String[] formato=hora.get(position).split(" ");
         String[] horaFormateada=formato[1].split(":");

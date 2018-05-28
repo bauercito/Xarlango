@@ -140,6 +140,7 @@ public class Perfil extends AppCompatActivity {
                     if(child.getKey().equalsIgnoreCase(telefono_perfil+"_"+telefonoPropio)||child.getKey().equalsIgnoreCase(telefonoPropio+"_"+telefono_perfil)){
                         findViewById(R.id.abrirChat).setVisibility(View.INVISIBLE);
                         findViewById(R.id.chatAbierto).setVisibility(View.VISIBLE);
+                        return;
                     }else{
                         findViewById(R.id.abrirChat).setVisibility(View.VISIBLE);
                         findViewById(R.id.chatAbierto).setVisibility(View.INVISIBLE);
