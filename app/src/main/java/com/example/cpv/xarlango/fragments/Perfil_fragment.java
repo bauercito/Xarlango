@@ -1,10 +1,9 @@
-package com.example.cpv.xarlango;
+package com.example.cpv.xarlango.fragments;
 
 import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -15,7 +14,6 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.app.AlertDialog;
@@ -31,6 +29,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.cpv.chatpruebas.R;
+import com.example.cpv.xarlango.actividades.Chat;
+import com.example.cpv.xarlango.servicios.Service_conexionPermanente;
+import com.example.cpv.xarlango.servicios.Servicio_notificaciones;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
@@ -50,12 +51,9 @@ import static android.app.Activity.RESULT_OK;
 
 
 /**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link Perfil_fragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link Perfil_fragment#newInstance} factory method to
- * create an instance of this fragment.
+ *Clase que hereda de Fragment. Establece un fragment el cual sera usado sobre una actividad,
+ * Land_activity. Mostrara el perfil del usuario con sus datos recogidos del servidor. Tambien
+ * data la opcion de modificar estos datos cuando el usuario desee
  */
 public class Perfil_fragment extends Fragment {
     // TODO: Rename parameter arguments, choose names that match
@@ -69,10 +67,10 @@ public class Perfil_fragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
-    String nombre;
-    String telefono;
-    String descripcion;
-    static boolean pregunta=false;
+    String nombre; //nombre del usuario
+    String telefono; //telefono del usuario
+    String descripcion; //estado del usuario
+
 
     public Perfil_fragment() {
         // Required empty public constructor
@@ -96,6 +94,10 @@ public class Perfil_fragment extends Fragment {
         return fragment;
     }
 
+    /**
+     * Metodo que inicializa el fragment
+     * @param savedInstanceState bundel con datos primitivos
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -106,18 +108,35 @@ public class Perfil_fragment extends Fragment {
 
     }
 
+    /**
+     * metodo que pasa cuando el fragment esta en primer plano. Establece una variable estatica
+     * de apoyo para el servicio de notificaciones
+     */
     @Override
     public void onResume() {
-        servicio_notificaciones.ESTADOAPP=false;
+        Servicio_notificaciones.ESTADOAPP=false;
         super.onResume();
     }
 
+    /**
+     * Metodo que es llamado cuando el fragment entra en segundo plano. Establece una variable
+     * estatica de apoyo para el servicio de notificaciones
+     */
     @Override
     public void onPause() {
         super.onPause();
-        servicio_notificaciones.ESTADOAPP=true;
+        Servicio_notificaciones.ESTADOAPP=true;
     }
 
+    /**
+     * Metodo que infla el frgament de un layout proporcionado. Devolvera una vista con el contenido
+     * del layout modificado. Se rellanara un snniper cone estados, nombre, telefono y foto del
+     * usuario
+     * @param inflater inflado del layout
+     * @param container vista del contenedor del fragment
+     * @param savedInstanceState bundle con datos guardados que rescatara el fragment si fuese necesario
+     * @return devuelve vista para ser cargada en la actividad sobre la que se lanza
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -190,7 +209,10 @@ public class Perfil_fragment extends Fragment {
     }
 
 
-    //ABRO NUEVO CHAT CON EL BUTTON
+    /**
+     * metodo sin usar vista
+     * @param v
+     */
     public void abrir_chat(View v){
         String numero=getTelefonoPropio() ;
         String nombreChat=numero+"_"+telefono;
@@ -201,7 +223,11 @@ public class Perfil_fragment extends Fragment {
         startActivity(i);
     }
 
-    //REVISO SI EXISTE ALGUN CHAT, SI LO HAY NO DEJO QUE ABRA CHAT
+    /**
+     * metodo sin usar
+     * @param telefono_perfil telefono
+     * @param v vista
+     */
     public void comprobarExisteChat(final String telefono_perfil, final View v){
         final String telefonoPropio=getTelefonoPropio();
         FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -224,13 +250,22 @@ public class Perfil_fragment extends Fragment {
         });
     }
 
-    //CONSIGO TELEFONO PROPIO
+    /**
+     * metodo que recogel el numero de telefono del usuario local
+     * @return devuelve numero de telefono local
+     */
     public String getTelefonoPropio(){
         TelephonyManager tMgr=(TelephonyManager) getActivity().getSystemService(Context.TELEPHONY_SERVICE);
         return tMgr.getLine1Number();
     }
 
-    //MOSTRAR DIALOG DE CONFIRMACION
+    /**
+     * Metodo que es llamado cuando el usuario pulsa sobre la vista de aceptar confirmacion en
+     * el layout. Muestra un dialog personalizado pidiendo la confirmacion de los cambios.
+     * Si el usuario acepta los cambios, seran grabados en el servidor
+     * @param nombre nombre del usuario
+     * @param estado estado del usuario
+     */
     public void createDialogConfirm(final String nombre, final int estado){
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Modificar perfil")
@@ -257,7 +292,10 @@ public class Perfil_fragment extends Fragment {
                 .show();
     }
 
-    //GET NOMBRE Y ESTADO tambien lo pongo en sus correspondientes editView
+    /**
+     * metodo sin usar
+     * @param v vista
+     */
     public void getNombre_estado(final View v){
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference myRef = database.getReference("users/"+telefono);
@@ -285,7 +323,12 @@ public class Perfil_fragment extends Fragment {
             }
         });
     }
-    //BOTON DE MODIFICAR
+
+    /**
+     * Metodo que pone a la escucha un imageview para llamar a createDialogConfirm si el usuario lo
+     * pulsa. Tiene que pasar antes por una validacion antes de llamar al metodo mencionado
+     * @param vista_fragment vista del fragmento lanzado
+     */
     public void modificar(final View vista_fragment){
         vista_fragment.findViewById(R.id.modificar).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -315,8 +358,9 @@ public class Perfil_fragment extends Fragment {
     }
 
 
-    //PARA PONER FOTO AL PERFIL
-    //OBTENER ACCESO A LA CAMARA Y POSTERIORES
+    /**
+     * Metodo que grabara en el servidor la imagen establecido por el usuario
+     */
     public void guardarImagenFireBase(){
         StorageReference storageRef =FirebaseStorage.getInstance().getReference();
         StorageReference mountainsRef = storageRef.child(telefono+".jpg");
@@ -345,6 +389,13 @@ public class Perfil_fragment extends Fragment {
             }
         });
     }
+
+    /**
+     * Metodo que establecera el perfil del usuario recuperada desde el servidor. Tambien pondra a
+     * la escucha dos ImageView, tanto para tener acceso a la camara de fotos como para tener
+     * acceso a la galeria de fotos del usuario local
+     * @param v vista de la actividad
+     */
     public void foto_perfil(View v){
         //RECUPERO LA FOTO DE FIREBASE
         StorageReference storageRef =FirebaseStorage.getInstance().getReference();
@@ -394,6 +445,11 @@ public class Perfil_fragment extends Fragment {
 
 
     }
+
+    /**
+     * Comprube si la aplicacion tiene permisos de acceso a la camara de fotos del movil.
+     * Si os tiene llama al metodo hacerFoto(), si no los solicita al usuario
+     */
     public void permisosCamara(){
         if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(getActivity(),new String[]{Manifest.permission.CAMERA},0);
@@ -401,6 +457,15 @@ public class Perfil_fragment extends Fragment {
             hacerFoto();
         }
     }
+
+    /**
+     * Pide al usuario permisos para acceder a la camara de fotos del dispositivos. Si los da llama
+     * al metodo hacerFoto(), si no se le comunica al usuario que sin permisos no hay foto de
+     * perfil
+     * @param requestCode numero de solicitud
+     * @param permissions tipo de permiso a proporcionar
+     * @param grantResults numero de resultado
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch(0){
@@ -412,6 +477,10 @@ public class Perfil_fragment extends Fragment {
                 }
         }
     }
+
+    /**
+     * Llama a la actividad que lanza la camara de fotos
+     */
     public void hacerFoto(){
         Intent i=new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if(i.resolveActivity(getActivity().getPackageManager())!=null){
@@ -419,6 +488,13 @@ public class Perfil_fragment extends Fragment {
         }
     }
 
+    /**
+     * Metodo que devuelve la  foto de la camara de fotos o de la galeria de imagenes del
+     * dispositivo. Una vez obtenida la imagen se establece en un ImageView
+     * @param requestCode codigo de peticion
+     * @param resultCode resultado de la peticion
+     * @param data intentn del que fue llamado
+     */
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(requestCode==0&&resultCode==RESULT_OK){
@@ -442,6 +518,11 @@ public class Perfil_fragment extends Fragment {
         }
     }
 
+    /**
+     * Metodo que redondea la imagen pasada por parametros
+     * @param image imagen en formato bitmap
+     * @return devuelve la imagen redondeada
+     */
     public RoundedBitmapDrawable redondear_imagen(Bitmap image){
         //creamos el drawable redondeado
         RoundedBitmapDrawable roundedDrawable =

@@ -97,7 +97,8 @@
                                       <entry key="assetType" value="IMAGE" />
                                       <entry key="backgroundColor" value="23b0a8" />
                                       <entry key="cropped" value="true" />
-                                      <entry key="imageAsset" value="G:\CPV\Downloads\chats.png" />
+                                      <entry key="iconShape" value="NONE" />
+                                      <entry key="imageAsset" value="G:\xarlangocutg.png" />
                                     </map>
                                   </option>
                                 </PersistentState>

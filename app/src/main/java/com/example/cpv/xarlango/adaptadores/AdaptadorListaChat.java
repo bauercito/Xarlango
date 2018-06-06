@@ -1,4 +1,4 @@
-package com.example.cpv.xarlango;
+package com.example.cpv.xarlango.adaptadores;
 
 import android.app.Activity;
 import android.content.Context;
@@ -19,32 +19,67 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.Locale;
 
+/**
+ * Clase que hereda de BaseAdapter y establece un adaptador para mostrar las conversaciones
+ * en una conversacion de un usuario. Recogera todos los datos de la coversacion con el usuario
+ * local y destino y los msotrara de manera ordenada en pantalla de la actividad
+ */
 public class AdaptadorListaChat extends BaseAdapter {
-    ArrayList<String> chats=new ArrayList();
-    Activity actividad;
-    String numero;
+    ArrayList<String> chats=new ArrayList(); //listado de las conversaciones de un chat
+    Activity actividad; //actividad que se usara para sacar el contexto de la misma
+    String numero; //numero de telefono
 
+    /**
+     * Contructor que inicializara las variables globales a traves de los paramatros pasados
+     * @param actividad actividad que se usara para sacar el contexto de la misma
+     * @param chats listado de las conversaciones de un chat
+     * @param numero numero de telefono
+     */
     public AdaptadorListaChat(Activity actividad, ArrayList<String> chats,String numero){
         this.chats=chats;
         this.actividad=actividad;
         this.numero=numero;
     }
 
+    /**
+     * Metodo que devuelve el numero total del tamaño de la lista
+     * @return devuelve el numero total del array
+     */
     @Override
     public int getCount() {
         return chats.size();
     }
 
+    /**
+     * Devuelve el objeto de la posicion dada por el arrayList
+     * @param position posicion del arrayList
+     * @return objecto del arrayList
+     */
     @Override
     public Object getItem(int position) {
         return chats.get(position);
     }
 
+    /**
+     * Metodo que devuelve la posicion del Arrylist por el que se encuentra el adaptador
+     * @param position posicion del arrayList
+     * @return posicion del arrayList
+     */
     @Override
     public long getItemId(int position) {
         return position;
     }
 
+    /**
+     * Metodo que buscara en la base de datos todas las conversaciones que esten dentro de un chat y
+     * las pondra een forma de lista en el Listview. Inflara un layaout personalizado para establecer
+     * a traves de un textView esos datos recogidos. Tambien mostrara la fecha recogida en cada
+     * elemento de la lista
+     * @param position posicion en la que se encuentra el arrayList
+     * @param convertView vista del layaout
+     * @param parent padre de la vista del layout
+     * @return devuelve la vista creada por el adaptador
+     */
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View v = convertView;

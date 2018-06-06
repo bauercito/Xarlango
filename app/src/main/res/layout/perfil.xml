@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/fondo1"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context="com.example.cpv.xarlango.Perfil_fragment">
+    tools:context="com.example.cpv.xarlango.fragments.Perfil_fragment">
 
 
     <android.support.constraint.ConstraintLayout

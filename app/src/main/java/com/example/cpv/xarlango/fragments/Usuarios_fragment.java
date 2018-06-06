@@ -1,4 +1,4 @@
-package com.example.cpv.xarlango;
+package com.example.cpv.xarlango.fragments;
 
 import android.content.Context;
 import android.content.Intent;
@@ -14,6 +14,9 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 
 import com.example.cpv.chatpruebas.R;
+import com.example.cpv.xarlango.actividades.Chat;
+import com.example.cpv.xarlango.adaptadores.AdaptadorListaChat;
+import com.example.cpv.xarlango.servicios.Servicio_notificaciones;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -24,12 +27,8 @@ import java.util.ArrayList;
 
 
 /**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link Usuarios_fragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link Usuarios_fragment#newInstance} factory method to
- * create an instance of this fragment.
+ *Clase que mostrara el listado de conversaciones disponibles en el servidor del usuario. Se mostrara
+ * en forma de lista.
  */
 public class Usuarios_fragment extends Fragment implements Sin_chats.OnFragmentInteractionListener {
     // TODO: Rename parameter arguments, choose names that match
@@ -78,18 +77,34 @@ public class Usuarios_fragment extends Fragment implements Sin_chats.OnFragmentI
 
     }
 
+    /**
+     * Metodo que es llamado al estar el fragment en primer plano. Establece una variable estatica
+     * de apoyo al servicio de notificaciones
+     */
     @Override
     public void onResume() {
-        servicio_notificaciones.ESTADOAPP=false;
+        Servicio_notificaciones.ESTADOAPP=false;
         super.onResume();
     }
 
+    /**
+     * Metodo que es llamado al estar el fragment en segundo plano. Establece una variable estatica
+     * de apoyo al servicio de notificaciones
+     */
     @Override
     public void onPause() {
         super.onPause();
-        servicio_notificaciones.ESTADOAPP=true;
+        Servicio_notificaciones.ESTADOAPP=true;
     }
 
+    /**
+     * Metodo que inflara el fragment a partir de un layout. Llamara al metodo actualizarChat y
+     * recogera del bandle pasado por parametros el numero u nombre del usuario
+     * @param inflater inflado de layout
+     * @param container vista del cotenedor
+     * @param savedInstanceState bundle que contiene datos primitivos
+     * @return devuelve la vista del fragment
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -146,7 +161,13 @@ public class Usuarios_fragment extends Fragment implements Sin_chats.OnFragmentI
         void onFragmentInteraction(Uri uri);
     }
 
-    //MOSTRAR EL CHAT
+    /**
+     * Metodo que recoge del servidor los chats que el usuario tiene abiertos. Son guardados en un
+     * ArrayList y enviados al metodo que es llamado restablecerLsitView el cual sera llamado cada
+     * vez que exista un cambio de datos en el servidor con la direcion proporcionada en la
+     * referencia de firebase
+     * @param v vista
+     */
     public void actualizarChat(final View v){
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference myRef = database.getReference("users/"+numero+"/"+"chats");
@@ -168,6 +189,17 @@ public class Usuarios_fragment extends Fragment implements Sin_chats.OnFragmentI
             }
         });
     }
+
+    /**
+     * Metodo que llamara al adaptador para establecera la vista cada vez que en el servidor se
+     * detecten cambios. Mostrara en forma de lista todos los chats abiertos por el usuario mostrando
+     * el nombre de la persona con la que conversa, la fecha de la ultima creacion y el ultimo
+     * comentario realizado en la conversacion. Tambien llamara a un fragment: Sin_chats si el
+     * arrayList que contiene las conversaciones fuese 0. Pone a la escucha cada apartado de la
+     * lista para llevar a una actividad que sera la conversacion establecida por los usuarios
+     * @param chats arraylist que contiene las conversaciones abiertas por el usuario
+     * @param v vista de la actividad que da soporte al fragment
+     */
     public void restablecerListView(final ArrayList<String> chats,View v){
         ListView lista = (ListView)v.findViewById(R.id.listview);
         lista.setDivider(null);

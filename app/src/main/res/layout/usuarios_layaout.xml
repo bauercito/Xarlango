@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.cpv.xarlango.Usuarios_fragment">
+    tools:context="com.example.cpv.xarlango.fragments.Usuarios_fragment">
 
     <!-- TODO: Update blank fragment layout -->
 

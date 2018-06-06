@@ -1,4 +1,4 @@
-package com.example.cpv.xarlango;
+package com.example.cpv.xarlango.actividades;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -19,6 +19,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.cpv.chatpruebas.R;
+import com.example.cpv.xarlango.gui.Conexion_dialog;
+import com.example.cpv.xarlango.servicios.Servicio_notificaciones;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
@@ -29,11 +31,26 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+/**
+ * Clase que extiende de Activity. Se centrara en mostrar ciertos datos recogidos del servidor como
+ * foto, nombre, estado, numero de telefono. Esta actividad solo mostrara datos de un usuario
+ * destino que quiera ver el usuario local
+ */
 public class Perfil extends AppCompatActivity {
-    String nombre;
-    String telefono;
-    String estado;
-    private BroadcastReceiver mMessageReceiver = null;
+    String nombre;//nombre del usuario destino
+    String telefono;//telefono del usuario destino
+    String estado;//estado del usuario destino
+    private BroadcastReceiver mMessageReceiver = null; //broadcastReciver para poner a la escucha el servicio de conexion permanente
+
+    /**
+     * Metodo de entrada cuando se crea la actividad. Este metodo cargara el layout al cual esta
+     * asiciado. Pondra a la escucha un BroadcastReciver para poder tener el servicio de conexion
+     * permanente. Establecera y personalizara la toolbar. Tambien cargara incialmente todos los
+     * datos del servidor del usuario destino (foto,estado,nombre,numero). Por ultimo comprobara
+     * en el servidor si este usuario tiene un chat abierto con el usuario destino. Si no es asi
+     * le dejara abrir una nueva conversacion con el
+     * @param savedInstanceState paquete bundle con datos primitivos
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -99,25 +116,43 @@ public class Perfil extends AppCompatActivity {
 
     }
 
+    /**
+     * Metodo que sera llamado si la aplicacion se encuentra en primer plano. Pondra a la escucha el
+     * servicio  de notificaciones a traves de un BroadcastReciver. Tambiene stablecera una variable
+     * estatica para el apoyo de este
+     */
     @Override
     public void onResume() {
         super.onResume();
-        servicio_notificaciones.ESTADOAPP=false;
+        Servicio_notificaciones.ESTADOAPP=false;
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("EVENT_SNACKBAR"));
     }
+
+    /**
+     * Metodo que sera llamado si la aplicacion se encuentra en segundo plano. Dejara de registrar
+     * el broadCastReciver del servicio de notificaciones
+     */
     @Override
     protected void onStop() {
         super.onStop();
-        Extras.ESTADOAPP=true;
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
     }
+
+    /**
+     * Metodo que es llamado cuando la aplicacion se encuentra en segundo plano. Modifica una
+     * variable estatica.
+     */
     @Override
     protected void onPause() {
         super.onPause();
-        servicio_notificaciones.ESTADOAPP=true;
+        Servicio_notificaciones.ESTADOAPP=true;
     }
 
-    //ABRO NUEVO CHAT CON EL BUTTON
+    /**
+     * Metodo que se encuentra a la escucha de una ImageView. Inicia la actividad de chat.class.
+     * Enviara por un bundle a la nueva actividad el nombre del chat, numero y telefono
+     * @param v vista del layout
+     */
     public void abrir_chat(View v){
         String numero=getTelefonoPropio() ;
         String nombreChat=numero+"_"+telefono;
@@ -128,7 +163,14 @@ public class Perfil extends AppCompatActivity {
         startActivity(i);
     }
 
-    //REVISO SI EXISTE ALGUN CHAT, SI LO HAY NO DEJO QUE ABRA CHAT
+
+
+    /**
+     * Metodo que es llamado al inicio de la actividad. Comprueba en el servidor si la persona
+     * destino y la local ya tienen una conversacion registrada en el servidor. Si no la tiene
+     * dejara al usuario abrir una conversacion con el usuario destino
+     * @param telefono_perfil telefono del usuario destino
+     */
     public void comprobarExisteChat(final String telefono_perfil){
         final String telefonoPropio=getTelefonoPropio();
         FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -155,13 +197,19 @@ public class Perfil extends AppCompatActivity {
         });
     }
 
-    //CONSIGO TELEFONO PROPIO
+    /**
+     * Metodo que recoge el numero de telefono personal del usuario
+     * @return devielve el numero de telefono del usuario
+     */
     public String getTelefonoPropio(){
         TelephonyManager tMgr=(TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         return tMgr.getLine1Number();
     }
 
-    //CARGAR LA FOTO EN EL IMAGEVIEW
+    /**
+     * Metodo llamado al inicio de la actividad. Establece en un imageView la foto elegida por el
+     * usuario destino. Sera recogida del servidor e implementada en el layout
+     */
     public void cargarFoto(){
         //RECUPERO LA FOTO DE FIREBASE
         StorageReference storageRef =FirebaseStorage.getInstance().getReference();
@@ -189,7 +237,12 @@ public class Perfil extends AppCompatActivity {
             }
         });
     }
-    //redondear imagen
+
+    /**
+     * Metodo que redondea la imagen pasada por parametros
+     * @param image imagen bitmap para rendondear
+     * @return
+     */
     public RoundedBitmapDrawable redondear_imagen(Bitmap image){
         //creamos el drawable redondeado
         RoundedBitmapDrawable roundedDrawable =

@@ -1,16 +1,12 @@
-package com.example.cpv.xarlango;
+package com.example.cpv.xarlango.actividades;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
-import android.media.AudioManager;
-import android.media.Image;
-import android.media.MediaPlayer;
 import android.os.StrictMode;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
@@ -18,7 +14,6 @@ import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Gravity;
@@ -32,6 +27,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.cpv.chatpruebas.R;
+import com.example.cpv.xarlango.adaptadores.AdaptadorChatPersonalizado;
+import com.example.cpv.xarlango.gui.Conexion_dialog;
+import com.example.cpv.xarlango.servicios.Servicio_notificaciones;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
@@ -51,20 +49,33 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+/**
+ * Clase que establece los metodos necesarios para crear una sala de conversacion con el que dos
+ * usuarios con la aplicacion instalada puedan conversar
+ */
 public class Chat extends AppCompatActivity {
-    String nombreChat;
-    String numeroOrigen;
-    String numeroDestino;
-    AdaptadorChatPersonalizado adaptador;
-    ListView lista;
-    ArrayList<String> palabras;
-    ArrayList<String> persona;
-    String[] hora_contacto;
-    ArrayList<String> hora;
-    private BroadcastReceiver mMessageReceiver = null;
-    TelephonyManager tMgr;
-    String numeroPropio;
+    String nombreChat; //nombre del chat compuesto por los dos telefonos de los usuarios
+    String numeroOrigen; //numero de quien creo la covnersacion
+    String numeroDestino; //numero de quien no creo la conversacion
+    AdaptadorChatPersonalizado adaptador; //adaptador del listvoew
+    ListView lista; //listview
+    ArrayList<String> palabras; //array usado de apoyo
+    ArrayList<String> persona; //nombres las dos personas
+    String[] hora_contacto; //fecha de las conversaciones
+    ArrayList<String> hora; //decha de las conversaciones
+    private BroadcastReceiver mMessageReceiver = null; //broadcastreciver para la conexion erpmanente
+    TelephonyManager tMgr; //necesario para sacar el telefono local
+    String numeroPropio; //numero de la persona local
 
+    /**
+     * Metodo que es llamado al iniciar la actividad. Establece el layout. Pone a la escucha la
+     * conexion permanente llama al metodo get telefono apra establecer la variable global
+     * numeroPropio. Establece la tollbar personalizada y pone a la escucha la foto ey el nombre de
+     * perfil del usuario destino. Tambien llama al adaptador de chatPersonalizado para cargar
+     * la conversacion y las futuras covnersaciones que vayan apareciendo
+     * @param savedInstanceState bundle que recogera datos primitivos si la aplicacion pasaes a
+     *                           segundo plano
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -167,24 +178,45 @@ public class Chat extends AppCompatActivity {
         });
     }
 
+    /**
+     * Metodo sobreescrito que sera llamado cuando la actividad este en primer plano. Pone a la
+     * escucha un broadCastReciver y establece una variable estatica para el estaod de las
+     * notificaciones
+     */
     @Override
     public void onResume() {
         super.onResume();
-        servicio_notificaciones.ESTADOAPP=false;
+        Servicio_notificaciones.ESTADOAPP=false;
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("EVENT_SNACKBAR"));
     }
+
+    /**
+     * Metod sobreescrito que es llamado cuando la aplicacion entra en segundo plano. Deja de
+     * registrar el broadcastReciver
+     */
     @Override
     protected void onStop() {
         super.onStop();
-        Extras.ESTADOAPP=false;
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
     }
+
+    /**
+     * Metodo sobreescrito que es llamado cuando la aplicacion entra en segundo plano. Establece
+     * una variable estatica para el servicio de notificaciones
+     */
     @Override
     protected void onPause() {
         super.onPause();
-        servicio_notificaciones.ESTADOAPP=true;
+        Servicio_notificaciones.ESTADOAPP=true;
     }
 
+    /**
+     * Llama al adaptador para que establezca en el listView todas las conversaciones tomadas por
+     * los usuarios en la covnersacion
+     * @param palabras conversaciones pasadas a un arrayList
+     * @param persona las personas de la conversacion
+     * @param hora hora de cada conversacion enviada
+     */
     public void restablecerListView(ArrayList<String> palabras,ArrayList<String> persona,ArrayList<String> hora) {
 
         adaptador=new AdaptadorChatPersonalizado(palabras,persona,numeroOrigen,this,hora);
@@ -194,7 +226,13 @@ public class Chat extends AppCompatActivity {
 
     }
 
-
+    /**
+     * Metodo que pone a la escucha un ImageView que enviara al servidor lo ultimo escrito en
+     * la conversacion por el usuario. Si el usuario no excribe en el Input proporcionado sera
+     * infiormado. Tambien escribira en el servidor una seria de metadaros para saber la fecha
+     * de el texto enviado
+     * @param enviar vista del layout
+     */
     public void enviar(View enviar) {
         TextView input = findViewById(R.id.texto1);
         if(input.getText().toString().equalsIgnoreCase("")){
@@ -225,6 +263,10 @@ public class Chat extends AppCompatActivity {
 
     }
 
+    /**
+     * Metodo que devulve la fecha proporcionada por un servidor
+     * @return
+     */
     public String obtenerFecha() {
         String[] hosts = new String[] {"0.pool.ntp.org"};
 
@@ -254,12 +296,21 @@ public class Chat extends AppCompatActivity {
         return null;
 
     }
+
+    /**
+     * Metodo que devuleve la fecha actual del dispositivo movil
+     * @return
+     */
     public String obtenerFecha2(){
         Date date=new Date();
         SimpleDateFormat OutPutFormat = new SimpleDateFormat(
                 "dd-M-yyyy HH:mm:ss:SSS", java.util.Locale.getDefault());
         return OutPutFormat.format(date);
     }
+
+    /**
+     * Metodo que establece el nombre del usuario con el que se conversa y lo pone en la toolbar
+     */
     public void obtenerNombreDestino(){
         FirebaseDatabase database02 = FirebaseDatabase.getInstance();
         DatabaseReference myRef02=null;
@@ -281,6 +332,10 @@ public class Chat extends AppCompatActivity {
             public void onCancelled(DatabaseError databaseError) { }
         });
     }
+
+    /**
+     * Metodo que establece la foto del usuario con el que se conversa en la toolbar
+     */
     public void cargarFotoDestino(){
         //RECUPERO LA FOTO DE FIREBASE
         StorageReference storageRef = FirebaseStorage.getInstance().getReference();
@@ -317,7 +372,12 @@ public class Chat extends AppCompatActivity {
 
         });
     }
-    //redondear imagen
+
+    /**
+     * Metodo que devuelve una imagen sin esquinas y redondeada
+     * @param image bitmap de la imagen a redondear
+     * @return imagen redondeada
+     */
     public RoundedBitmapDrawable redondear_imagen(Bitmap image){
         //creamos el drawable redondeado
         RoundedBitmapDrawable roundedDrawable =
@@ -329,12 +389,24 @@ public class Chat extends AppCompatActivity {
         return roundedDrawable;
     }
     //TOOLBAR
+
+    /**
+     * Infla una tollbar personalizada
+     * @param menu
+     * @return
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.bar_chat,menu);
         return true;
     }
 
+    /**
+     * Establece una opcion en la toolbar llamada perfil. Iniciara la actividad perfil.class que
+     * sera el perfil del usuario con el que se conversa
+     * @param item opciones del menu
+     * @return boolean
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id=item.getItemId();
@@ -371,13 +443,21 @@ public class Chat extends AppCompatActivity {
             return super.onOptionsItemSelected(item);
         }
     }
-    //recuperar telefono propio
+
+    /**
+     * establece el numero local del telefono en la variable global telefonopropio
+     */
     public void getTelefono(){
+
         numeroPropio= tMgr.getLine1Number();
         //LANZO EL SERVICIO DE NOTIFICACIONES
-        Intent intent2 = new Intent(this, servicio_notificaciones.class);
+        Intent intent2 = new Intent(this, Servicio_notificaciones.class);
         startService(intent2);
     }
+
+    /**
+     * Iniciara la actividad perfil.class que sera el perfil del usuario con el que se conversa
+     */
     public void cargarPerfilDesdeFoto(){
         FirebaseDatabase database02 = FirebaseDatabase.getInstance();
         DatabaseReference myRef02=null;

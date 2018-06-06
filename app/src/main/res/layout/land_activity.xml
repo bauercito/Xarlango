@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/fondo1"
-    tools:context="com.example.cpv.xarlango.Land_activity"
+    tools:context="com.example.cpv.xarlango.actividades.Land_activity"
     tools:layout_editor_absoluteY="81dp">
 
     <FrameLayout

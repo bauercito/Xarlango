@@ -1,4 +1,4 @@
-package com.example.cpv.xarlango;
+package com.example.cpv.xarlango.adaptadores;
 
 import android.content.Context;
 import android.media.MediaPlayer;
@@ -24,13 +24,27 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 
+/**
+ * clase que hereda de BaseAdapter y que realiza la funcion de adaptador para el listview de msotrar el listado de las
+ * conversaciones en la actividad Land_activity. En este se encontraran los metodos que cargaran
+ * un layout especifico y listara conversacion por conversacion que tenga el usuario añadido
+ * al servidor
+ */
 public class AdaptadorChatPersonalizado extends BaseAdapter {
-    ArrayList<String>conversacion=new ArrayList();
-    ArrayList<String>persona=new ArrayList();
-    ArrayList<String> hora;
-    String telefonoPropio;
-    Context actividad;
+    ArrayList<String>conversacion=new ArrayList(); //lista de conversaciones del usuario
+    ArrayList<String>persona=new ArrayList(); // lista de personas con las que tiene conversaciones el usuario
+    ArrayList<String> hora; //hora de registro de las conversaciones
+    String telefonoPropio; //telefono del usuario local
+    Context actividad; //contexto de la actividad
 
+    /**
+     * Contructor que inicializara las variables globales por los parametros pasados
+     * @param conversacion lista de conversaciones del usuario
+     * @param persona lista de personas con las que tiene conversaciones el usuario
+     * @param telefonoPropio telefono del usuario local
+     * @param actividad contexto de la actividad
+     * @param hora hora de registro de las conversaciones
+     */
     public AdaptadorChatPersonalizado(ArrayList<String> conversacion,ArrayList<String> persona,String telefonoPropio,Context actividad,ArrayList<String> hora){
         this.conversacion=conversacion;
         this.persona=persona;
@@ -38,10 +52,22 @@ public class AdaptadorChatPersonalizado extends BaseAdapter {
         this.actividad=actividad;
         this.hora=hora;
     }
+
+    /**
+     * Metodo que devuelve el numero de conversaciones registradas en el servidor
+     * @return numero de conversaciones
+     */
     @Override
     public int getCount() {
         return conversacion.size();
     }
+
+    /**
+     * Metodo que devuelve el objeto de la posicion  en la que se encuentra el ArrayList de las
+     * conversaciones recogidas en el servidor
+     * @param position numero de posicion
+     * @return numero de posicion
+     */
     @Override
     public Object getItem(int position) {
         if(conversacion!=null){
@@ -50,11 +76,26 @@ public class AdaptadorChatPersonalizado extends BaseAdapter {
         return 0;
     }
 
+    /**
+     * Metodo que devuelve la posicion en la que se encuentra el ArrayList de las conversaciones
+     * recogidas en el servidor
+     * @param position numero de posicion
+     * @return numero de posicion
+     */
     @Override
     public long getItemId(int position) {
         return position;
     }
 
+    /**
+     * Metodo que inflara la vista con el layaout personalizado por cada elemento de la lista
+     * proporcionada. En este caso sera una lista ArrayList. Establecera en cada elemento una serie
+     * de datos recogidos del servidor para que puedan ser infladas y mostradas
+     * @param position posicion
+     * @param convertView vista del layaout inflado
+     * @param parent padre de la vista del layout inflado
+     * @return
+     */
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View v = convertView;

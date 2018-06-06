@@ -1,4 +1,4 @@
-package com.example.cpv.xarlango;
+package com.example.cpv.xarlango.actividades;
 
 import android.Manifest;
 import android.content.BroadcastReceiver;
@@ -27,6 +27,9 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.example.cpv.chatpruebas.R;
+import com.example.cpv.xarlango.adaptadores.AdaptadorListaChat;
+import com.example.cpv.xarlango.gui.Conexion_dialog;
+import com.example.cpv.xarlango.servicios.Servicio_notificaciones;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -70,19 +73,18 @@ public class Usuarios extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-        servicio_notificaciones.ESTADOAPP=false;
+        Servicio_notificaciones.ESTADOAPP=false;
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("EVENT_SNACKBAR"));
     }
     @Override
     protected void onStop() {
         super.onStop();
-        Extras.ESTADOAPP=true;
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
     }
     @Override
     protected void onPause() {
         super.onPause();
-        servicio_notificaciones.ESTADOAPP=true;
+        Servicio_notificaciones.ESTADOAPP=true;
     }
 
     //MOSTRAR EL CHAT

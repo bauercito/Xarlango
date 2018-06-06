@@ -1,7 +1,5 @@
-package com.example.cpv.xarlango;
+package com.example.cpv.xarlango.servicios;
 
-import android.app.Notification;
-import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -17,10 +15,9 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 import android.telephony.TelephonyManager;
-import android.util.Log;
-import android.widget.Toast;
 
 import com.example.cpv.chatpruebas.R;
+import com.example.cpv.xarlango.actividades.Chat;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -29,8 +26,20 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 
-public class servicio_notificaciones extends Service {
-    static boolean ESTADOAPP=false;
+/**
+ * Clase encargada del sistema de notificaciones de la aplicacion. Hereda de servicice, por lo que
+ * se encontrara en segundo plano en cualquier momento de la aplicacion lanzada a traves de un hilo
+ * con AsyncTask. Tendra una variable estatica de apoyo repartido en todas las actividades de la
+ * aplicacion para saber cuando la aplicacione sta en segundo plano o en primero
+ */
+public class Servicio_notificaciones extends Service {
+    public static boolean ESTADOAPP=false; //variable estatica que ira cambiando segun la aplicacion
+                                            // entre en primer plano o en segundo
+
+    /**
+     * Metodo que sera llamado al iniciar el servicio. Inicializara la variable estatica ESTADOAPP
+     * a false e iniciara un hilo para cargar el sistema de notificaciones
+     */
     @Override
     public void onCreate() {
         super.onCreate();
@@ -39,31 +48,64 @@ public class servicio_notificaciones extends Service {
         noti.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
-
+    /**
+     * Metodo que sera llamado cuando vuelva a ser iniciado el servicio por segunda vez o mas. Ya
+     * no pasara por el onCreate si no que pasara por este metodo
+     * @param intent intent de donde fue llamado el servicio
+     * @param flags marcador
+     * @param startId id inicial
+     * @return numero de como tiene que actuar el servicio. "inicio pegajoso" en este caso. No
+     * finalizara el servicio
+     */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         return super.onStartCommand(intent, flags, startId);
     }
 
+    /**
+     * Metodo que recoge el numero de telefono del usuario local
+     * @return devuelve un string con el numero de telefono
+     */
     public String getTelefono(){
         TelephonyManager tMgr;
         tMgr=(TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         return tMgr.getLine1Number();
     }
 
+    /**
+     * Metodo que sera llamado cuando se destrulla el servicio. No usado
+     */
     @Override
     public void onDestroy() {
         super.onDestroy();
     }
 
+    /**
+     * Metodo no usado
+     * @param intent
+     * @return
+     */
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return null;
     }
-    private class Notificacion_chat extends AsyncTask<String,String,String> {
 
+    /**
+     * Clase interna que heredara de AsyncTask. Creara un hilo para lanzar una tarea en segundo
+     * plano. Esta tarea comprobara si ha habido algun cambio en alguna conversacion del usuario.
+     * Si es asi, comprobara si se encuentra en segundo plano la aplicacion, lanzando una
+     * notificacion al area de notificaciones del dispositivo en caso afirmativo
+     */
+    private class Notificacion_chat extends AsyncTask<String,String,String> {
+        /**
+         * Metodo que lanza la tarea en segundo plano. Comprobara las conversaciones que tiene
+         * abiertas el usuario. Una vez echo esto llamara al metodo ponerListenerChats() pasandole
+         * por parametros un arrayList con las conversaciones abiertas del usuario
+         * @param strings sin usar
+         * @return retorno nulo
+         */
         @Override
         protected String doInBackground(String... strings) {
                 final String telefono = getTelefono();
@@ -99,17 +141,26 @@ public class servicio_notificaciones extends Service {
                 return null;
                 //return null;
         }
-
+        /**
+         * Metodo quie sera llamado antes de iniciar el hilo. No usado
+         */
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
         }
-
+        /**
+         * Metodo que sera llamado despues de acabar la tarea. No usado
+         * @param s no usado
+         */
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
         }
-
+        /**
+         * Metodo que sera llamado cuando se especifique en la tarea lanzada. En este metodo se
+         * podran realizar cambios en el primer plano de la aplicacion. No usada
+         * @param values sin usar
+         */
         @Override
         protected void onProgressUpdate(String... values) {
             /*NotificationManager nManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -124,68 +175,19 @@ public class servicio_notificaciones extends Service {
 
 
         }
-
+        /**
+         * Metodo que sera llamado cuando se cancele la tarea. No usado
+         */
         @Override
         protected void onCancelled() {
             super.onCancelled();
         }
 
-
-        public void listenerChats(final String[] ultima, ArrayList<String> chatsAbiertos, final int index, final ArrayList<String> nombres){
-            FirebaseDatabase database01 = FirebaseDatabase.getInstance();
-            DatabaseReference myRef01 = database01.getReference("message/" +chatsAbiertos.get(index));
-            myRef01.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    for (DataSnapshot child : dataSnapshot.getChildren()) {
-                        ultima[0] =child.getValue().toString();
-                    }
-                    if(servicio_notificaciones.ESTADOAPP){
-                        NotificationManager nManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                        NotificationCompat.Builder builder = new NotificationCompat.Builder(
-                                getBaseContext())
-                                .setSmallIcon(R.drawable.chats)
-                                .setContentTitle("Xarlango")
-                                .setContentText(nombres.get(index)+" dice: "+ultima[0])
-                                .setWhen(System.currentTimeMillis());
-                        nManager.notify(index, builder.build());
-                    }
-
-                    //publishProgress(ultima[0]);
-
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-
-                }
-            });
-        }
-        public String getNombre (String[] nombreChat){
-            String telefonoDestino;
-            final String[] nombre = new String[1];
-            if(nombreChat[0]!=getTelefono()){
-                telefonoDestino=nombreChat[0];
-            }else{
-                telefonoDestino=nombreChat[1];
-            }
-            FirebaseDatabase database = FirebaseDatabase.getInstance();
-            DatabaseReference myRef = database.getReference("users/"+telefonoDestino+"/nombre");
-            myRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    nombre[0] =dataSnapshot.getValue().toString();
-
-
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-
-                }
-            });
-            return nombre[0];
-        }
+        /**
+         * Metodo que sacara el nombre del telefono destino para luego pasarselo al metodo
+         * ponerListnersChat
+         * @param chatsAbiertos
+         */
         public void ponerListenerChats(final ArrayList<String> chatsAbiertos){
             String telefonoDestino;
             //saco los nombres DEL TELEFONO DESTINO
@@ -216,6 +218,17 @@ public class servicio_notificaciones extends Service {
             }
 
         }
+
+        /**
+         * Metodo que pondra a la escucha cada conversacion que tenga abierta el usuario local.
+         * Si se detecta un cambio en la conversacion esta creara una notificacion comprobando
+         * previamente si la aplicacion se encuentra en segundo plano. Esta notificacion se
+         * encontrara en el area de notificaciones y ira acompañada por un sonido, la persona
+         * quien escribio y el texto que escribio
+         * @param nombre nombre de la persona destino
+         * @param chatsAbiertos chat que ha manteniddo con la persona
+         * @param i index
+         */
         public void ponerListenerChat(final String nombre, final ArrayList<String> chatsAbiertos, final int i){
             FirebaseDatabase database01 = FirebaseDatabase.getInstance();
             DatabaseReference myRef01 = database01.getReference("message/" +chatsAbiertos.get(i));
@@ -227,7 +240,7 @@ public class servicio_notificaciones extends Service {
                     for (DataSnapshot child : dataSnapshot.getChildren()) {
                          ultima_frase=child.getValue().toString();
                     }
-                    if(servicio_notificaciones.ESTADOAPP){
+                    if(Servicio_notificaciones.ESTADOAPP){
                         NotificationManager nManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                         NotificationCompat.Builder builder = new NotificationCompat.Builder(
                                 getBaseContext())

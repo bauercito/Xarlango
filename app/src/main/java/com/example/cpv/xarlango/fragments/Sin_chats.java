@@ -1,4 +1,4 @@
-package com.example.cpv.xarlango;
+package com.example.cpv.xarlango.fragments;
 
 import android.content.Context;
 import android.net.Uri;
@@ -12,12 +12,7 @@ import com.example.cpv.chatpruebas.R;
 
 
 /**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link Sin_chats.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link Sin_chats#newInstance} factory method to
- * create an instance of this fragment.
+ Clase que mosotrara un fragment indicando que no existen chats para mostrar
  */
 public class Sin_chats extends Fragment {
     // TODO: Rename parameter arguments, choose names that match
@@ -62,6 +57,13 @@ public class Sin_chats extends Fragment {
         }
     }
 
+    /**
+     * Metodo que infla un layout en el que aparecera que  no tiene chats que mostrar
+     * @param inflater inflado del fragment
+     * @param container vista del contenedor
+     * @param savedInstanceState bundle con  datos primitivos
+     * @return devuelve la vista inflada
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
